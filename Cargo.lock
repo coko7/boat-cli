@@ -126,12 +126,10 @@ dependencies = [
 [[package]]
 name = "boat-lib"
 version = "0.1.0"
-source = "git+https://github.com/coko7/boat-lib.git#26575896981f9e48ba3064dde6503dd03415f5a8"
+source = "git+https://github.com/coko7/boat-lib.git#9bc39dc504a33d9e7421b0911fce8cd2e7487fb8"
 dependencies = [
  "anyhow",
  "chrono",
- "clap",
- "clap-verbosity-flag",
  "csv",
  "env_logger",
  "log",
