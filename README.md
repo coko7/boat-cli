@@ -6,6 +6,12 @@
 
 This is only the code for the command line application. It relies on [`boat-lib`](https://github.com/coko7/boat-lib) for core functions.
 
+## 🚧 Work in Progress
+
+> [!WARNING]  
+> This cli is actively being developed. Since it's in its early stages, things will likely break often.
+> Don't use it for now.
+
 ## Commands
 
 ```help
