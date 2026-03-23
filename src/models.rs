@@ -14,9 +14,9 @@ pub struct SimpleActivity {
     pub id: Id,
     pub name: String,
     pub description: Option<String>,
+    pub ongoing: bool,
     pub tags: HashSet<String>,
     pub logs: Vec<SimpleLog>,
-    pub ongoing: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -32,6 +32,11 @@ impl SimpleLog {
             ends_at: log.ends_at.map(|t| t.with_timezone(&Local)),
         }
     }
+
+    pub fn duration_sec(&self) -> i64 {
+        let end = self.ends_at.unwrap_or(Local::now());
+        (end - self.starts_at).num_seconds()
+    }
 }
 
 impl SimpleActivity {
@@ -45,18 +50,19 @@ impl SimpleActivity {
             ongoing: activity.logs.iter().any(|l| l.ends_at.is_none()),
         }
     }
-}
 
-impl Display for SimpleActivity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let desc = self.description.as_deref().unwrap_or_default();
-        let tags = self
-            .tags
+    pub fn tags_str(&self) -> String {
+        self.tags
             .iter()
             .map(String::as_str)
             .collect::<Vec<_>>()
-            .join(",");
-        writeln!(f, "{}\t{}\t{desc}\t{tags}", self.id, self.name)?;
+            .join(",")
+    }
+
+    pub fn display_with_logs(&self) {
+        let desc = self.description.as_deref().unwrap_or_default();
+        let tags = self.tags_str();
+        println!("{}\t{}\t{desc}\t{tags}", self.id, self.name);
 
         for log in self.logs.iter() {
             let starts_at = log.starts_at.format("%H:%M:%S");
@@ -65,8 +71,15 @@ impl Display for SimpleActivity {
                 .as_ref()
                 .map(|t| t.format("%m-%d %H:%M:%S").to_string())
                 .unwrap_or_else(|| "ongoing".to_string());
-            writeln!(f, "\t - {} ---> {}", starts_at, ends_at)?;
+            println!("\t - {} ---> {}", starts_at, ends_at);
         }
-        Ok(())
+    }
+}
+
+impl Display for SimpleActivity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let desc = self.description.as_deref().unwrap_or_default();
+        let tags = self.tags_str();
+        write!(f, "{}\t{}\t{desc}\t{tags}", self.id, self.name)
     }
 }

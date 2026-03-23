@@ -1,5 +1,7 @@
+use std::ops::RangeInclusive;
+
 use boat_lib::repository::Id;
-use clap::{ArgAction, Args, Parser, Subcommand};
+use clap::{ArgAction, Args, Parser, Subcommand, ValueEnum};
 
 #[derive(Parser)]
 #[command(
@@ -12,9 +14,9 @@ use clap::{ArgAction, Args, Parser, Subcommand};
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
-
-    #[command(flatten)]
-    pub verbose: clap_verbosity_flag::Verbosity,
+    //
+    // #[command(flatten)]
+    // pub verbose: clap_verbosity_flag::Verbosity,
 }
 
 #[derive(Subcommand)]
@@ -30,11 +32,11 @@ pub enum Commands {
     Start(SelectActivityArgs),
 
     /// Manage configuration
-    // #[command(alias = "c", alias = "cfg", alias = "conf")]
-    // Config {},
+    #[command(alias = "c", alias = "cfg", alias = "conf")]
+    Config {},
 
     /// Pause/stop the current activity
-    #[command(alias = "p")]
+    #[command(alias = "p", alias = "stop")]
     Pause,
 
     /// Modify an activity
@@ -73,25 +75,32 @@ pub enum Commands {
 #[derive(Args, Debug)]
 #[group(multiple = false)]
 pub struct ListActivityArgs {
-    #[arg(short = 'a', long = "all")]
-    pub show_all: bool,
-
-    #[arg(short = 'r', long = "recent")]
-    pub show_recent: bool,
-
-    #[arg(short = 'c', long = "current")]
-    pub show_current: bool,
-
-    #[arg(short = 't', long = "tags")]
-    pub show_tags: bool,
-
-    /// Output in pretty format
-    #[arg(short = 'p', long = "pretty")]
-    pub use_pretty_format: bool,
+    /// Only show activities matching a certain period
+    #[arg(short = 'p', long = "period", value_name = "PERIOD", default_value_t = Period::Today, value_enum)]
+    pub period: Period,
 
     /// Output in JSON
     #[arg(short = 'j', long = "json")]
     pub use_json_format: bool,
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum Period {
+    #[value(name = "today", alias = "tod", alias = "td")]
+    Today,
+    #[value(name = "yesterday", alias = "yes", alias = "yd")]
+    Yesterday,
+    #[value(name = "week", alias = "wk")]
+    ThisWeek,
+    #[value(name = "last_week")]
+    LastWeek,
+    #[value(name = "month", alias = "mo")]
+    ThisMonth,
+    // #[value(name = "range")]
+    // DateRange {
+    //     #[arg(value_parser = range_parser)]
+    //     range: RangeInclusive<u32>,
+    // },
 }
 
 #[derive(Args, Debug)]
