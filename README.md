@@ -1,10 +1,13 @@
 # ⛵ boat
 
-![build](https://github.com/coko7/boat-cli/actions/workflows/rust.yml/badge.svg)
-
 `boat` - A **B**asic **O**pinionated **A**ctivity **T**racker, inspired by [bartib](https://github.com/nikolassv/bartib).
 
 This is only the code for the command line application. It relies on [`boat-lib`](https://github.com/coko7/boat-lib) for core functions.
+
+[![Crates info](https://img.shields.io/crates/v/boat-cli.svg)](https://crates.io/crates/boat-cli)
+[![License: GPL-3.0](https://img.shields.io/github/license/coko7/boat-cli?color=blue)](LICENSE)
+![Rust](https://img.shields.io/github/languages/top/coko7/boat-cli?color=orange)
+[![Tests](https://github.com/coko7/boat-cli/actions/workflows/rust.yml/badge.svg)](https://github.com/coko7/boat-cli/actions/workflows/rust.yml)
 
 > [!WARNING]  
 > 🚧 Work in Progress
