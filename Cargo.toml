@@ -1,11 +1,29 @@
 [package]
-name = "boat"
+name = "boat-cli"
 version = "0.1.0"
 edition = "2024"
+description = "Basic Opinionated Activity Tracker, a command line interface inspired by bartib"
+repository = "https://github.com/coko7/boat"
+authors = ["Coko <91132775+Coko7@users.noreply.github.com>"]
+license = "GPL-3.0-only"
+keywords = ["cli", "time-tracking", "time-tracker", "productivity"]
+categories = ["command-line-utilities", "filesystem"]
+include = ["src/**", "Cargo.toml", "README.md"]
+
+[[bin]]
+name = "boat"
+path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.6.0", features = ["derive"] }
 env_logger = "0.11.9"
 log = "0.4.29"
 clap-verbosity-flag = "3.0.4"
-boat-lib = "0.1.0"
+anyhow = "1.0.102"
+directories = "6.0.0"
+serde = { version = "1.0.228", features = ["derive"] }
+toml = "1.0.7"
+rusqlite = "0.39.0"
+chrono = { version = "0.4.44", features = ["serde"] }
+serde_json = "1.0.149"
+boat-lib = "0.3.1"

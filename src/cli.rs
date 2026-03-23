@@ -1,4 +1,4 @@
-use boat_lib::activity::ActId;
+use boat_lib::repository::Id;
 use clap::{ArgAction, Args, Parser, Subcommand};
 
 #[derive(Parser)]
@@ -24,9 +24,14 @@ pub enum Commands {
     #[command(alias = "n")]
     New(CreateActivityArgs),
 
+    // create a backup command
     /// Start/resume an activity
-    #[command(alias = "s", alias = "st")]
+    #[command(alias = "s", alias = "st", alias = "sail")]
     Start(SelectActivityArgs),
+
+    /// Manage configuration
+    // #[command(alias = "c", alias = "cfg", alias = "conf")]
+    // Config {},
 
     /// Pause/stop the current activity
     #[command(alias = "p")]
@@ -44,42 +49,61 @@ pub enum Commands {
     #[command(alias = "g")]
     Get(PrintActivityArgs),
 
-    /// List activities
+    /// List activities and tags
     #[command(alias = "l", alias = "ls")]
     List(ListActivityArgs),
+    // Edit the raw content of activity files
+    // #[command(alias = "e", alias = "ed")]
+    // Edit(EditFilesArgs),
 
-    /// Edit the raw content of activity files
-    #[command(alias = "e", alias = "ed")]
-    Edit(EditFilesArgs),
+    // Verify the activity data and report eventual issues
+    // #[command(alias = "v", alias = "verif")]
+    // Verify {},
 
-    /// Display a report with statistics about activities
-    #[command(alias = "r", alias = "rep")]
-    Report {},
+    // Query the different objects: activities, logs, tags
+    // #[command(alias = "q")]
+    // Query {},
+
+    // Display a report with statistics about activities
+    // #[command(alias = "r", alias = "rep")]
+    // Report {},
     // ^^^ or maybe export 'x' ???
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
+#[group(multiple = false)]
 pub struct ListActivityArgs {
-    #[arg(short = 'a', long = "all", conflicts_with_all = ["show_current","show_categories"])]
-    show_all: bool,
+    #[arg(short = 'a', long = "all")]
+    pub show_all: bool,
 
-    #[arg(short = 'c', long = "current", conflicts_with_all = ["show_all","show_categories"])]
-    show_current: bool,
+    #[arg(short = 'r', long = "recent")]
+    pub show_recent: bool,
 
-    #[arg(short = 'C', long = "category", conflicts_with_all = ["show_all","show_current"])]
-    show_categories: bool,
+    #[arg(short = 'c', long = "current")]
+    pub show_current: bool,
+
+    #[arg(short = 't', long = "tags")]
+    pub show_tags: bool,
+
+    /// Output in pretty format
+    #[arg(short = 'p', long = "pretty")]
+    pub use_pretty_format: bool,
+
+    /// Output in JSON
+    #[arg(short = 'j', long = "json")]
+    pub use_json_format: bool,
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 #[group(multiple = false)]
 pub struct PrintActivityArgs {
     /// Output in pretty format
     #[arg(short = 'p', long = "pretty")]
-    use_pretty_format: bool,
+    pub use_pretty_format: bool,
 
     /// Output in JSON
     #[arg(short = 'j', long = "json")]
-    use_json_format: bool,
+    pub use_json_format: bool,
 }
 
 impl Default for PrintActivityArgs {
@@ -91,61 +115,61 @@ impl Default for PrintActivityArgs {
     }
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct SelectActivityArgs {
     /// ID of the activity
-    activity_id: ActId,
+    pub activity_id: Id,
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct CreateActivityArgs {
     /// Name of the activity
-    activity: String,
+    pub name: String,
 
     /// ID of the parent activity
     #[arg(short, long)]
-    parent: Option<String>,
+    pub description: Option<String>,
 
     /// List of tags to apply to the activity
     #[arg(short, long, value_delimiter = ',', action = ArgAction::Append)]
-    tags: Vec<String>,
+    pub tags: Vec<String>,
 
     /// Start the new activity automatically
-    #[arg(short, long)]
-    start: bool,
+    #[arg(short = 's', long = "start")]
+    pub auto_start: bool,
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct ModifyActivityArgs {
     /// ID of the activity to edit
-    id: String,
+    pub id: Id,
 
     #[clap(flatten)]
-    update: UpdateGroup,
+    pub update: UpdateGroup,
 }
 
-#[derive(clap::Args)]
+#[derive(Args, Debug)]
 #[group(required = true)]
 pub struct UpdateGroup {
     /// New name for the activity
     #[arg(short = 'n', long = "name")]
-    name: Option<String>,
+    pub name: Option<String>,
 
-    /// New ID for the parent activity
-    #[arg(short = 'p', long = "parent")]
-    parent: Option<String>,
+    /// New description for the activity
+    #[arg(short, long)]
+    pub description: Option<String>,
 
     /// New list of tags to use for the activity
-    #[arg(short, long, value_delimiter = ',', action = ArgAction::Append)]
-    tags: Option<Vec<String>>,
+    #[arg(short, long, value_delimiter = ',', action = ArgAction::Append, num_args(0..))]
+    pub tags: Option<Vec<String>>,
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 #[group(required = true, multiple = false)]
 pub struct EditFilesArgs {
     #[arg(short = 'd', long = "definitions", alias = "def")]
-    edit_definitions: bool,
+    pub edit_definitions: bool,
 
     #[arg(short = 'l', long = "logs")]
-    edit_logs: bool,
+    pub edit_logs: bool,
 }
