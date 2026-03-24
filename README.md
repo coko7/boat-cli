@@ -15,13 +15,13 @@ This is only the code for the command line application. It relies on [`boat-lib`
 > This cli is actively being developed. Since it's in its early stages, things will likely break often.
 > Don't use it for now.
 
-## Why was this tool created?
+## 🤔 Why was this tool created?
 
 The [`bartib`](https://github.com/nikolassv/bartib) cli is what inspired me to create `boat`.
 It's a feature-full tool that I used for a while, but I found it quite limiting for my usage due to its [lack of support for machine-readable output](https://github.com/nikolassv/bartib/pull/26).
 That's it, I wanted an activity tracker that I could combine easily with [`jq`](https://github.com/jqlang/jq) and so I decided to make my own tool.
 
-## Installation
+## 🛠️ Installation
 
 The easiest way to install is through [crates.io](https://crates.io/crates/boat-cli):
 ```sh
@@ -51,28 +51,45 @@ cd boat-cli
 cargo build --release --features bundled-sqlite
 ```
 
-## Usage
+## ⚙️ Configuration
+
+By default, `boat` will create a configuration file in one of the following dirs:
+- 🐧 **Linux:** `/home/<user>/.config/boat/config.toml`
+- 🪟 **Windows:** `C:\Users\<user>\AppData\Roaming\boat\config.toml`
+- 🍎 **macOS:** `/Users/<user>/Library/Application Support/boat/config.toml`
+
+It will also keep the SQLite database file `boat.db` in the same directory (unless specified otherwise in config):
+```toml
+database_path = "/home/<user>/.config/boat/boat.db"
+```
+You can override the default configuration file path by setting the `BOAT_CONFIG` environment variable.
+
+## ✨ Usage
 
 To get a feel of how `boat` can be used, you can try `boat help` to get the list of commands:
 ```help
+boat 0.2.1
+
 Basic Opinionated Activity Tracker
 
-Usage: boat <COMMAND>
+Usage:
+boat <COMMAND>
 
 Commands:
   new     Create a new activity
   start   Start/resume an activity
-  config  Manage configuration
   pause   Pause/stop the current activity
   modify  Modify an activity
   delete  Delete an activity
   get     Get the current activity
-  list    List activities and tags
+  list    List boat objects
   help    Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help
   -V, --version  Print version
+
+Made by @coko7 <contact@coko7.fr>
 ```
 
 If you want to invoke `boat` from your command-line directly, you can make use of a variety of shorter aliases:
@@ -86,6 +103,7 @@ Commands:
   delete  d, del
   get     g
   list    l, ls
+  help    h, -h, --help
 ```
 I really wanted to have each command start with a different character so that I could assign a single-char alias to all of them.
 That explains why some of the commands do not use a more fitting keyword.

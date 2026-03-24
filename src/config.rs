@@ -7,31 +7,32 @@ use std::{env, fs, path::PathBuf};
 pub const APP_NAME: &str = "boat";
 pub const CONFIG_VAR: &str = "BOAT_CONFIG";
 pub const DEFAULT_CONFIG_PATH: &str = "config.toml";
-
-pub const DEFAULT_ACT_DEFS_PATH: &str = "act_defs.csv";
-pub const DEFAULT_ACT_LOGS_PATH: &str = "act_logs.csv";
+pub const DEFAULT_DB_FILE: &str = "boat.db";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Configuration {
-    #[serde(rename = "activity_definitions_path")]
-    pub activity_definitions_path: PathBuf,
-
-    #[serde(rename = "activity_logs_path")]
-    pub activity_logs_path: PathBuf,
+    #[serde(rename = "database_path")]
+    pub database_path: PathBuf,
 }
 
 impl Configuration {
-    pub fn new() -> Result<Self> {
-        let config_file = get_config_file()?;
-        let config_dir = config_file.parent().context("wait")?;
+    pub fn create_default() -> Result<Self> {
+        let config_file = get_config_file_path()?;
+        let config_dir = config_file
+            .parent()
+            .context("config file should have a parent directory")?;
+        let database_path = config_dir.join(DEFAULT_DB_FILE);
 
-        let activity_definitions_path = config_dir.join(DEFAULT_ACT_DEFS_PATH);
-        let activity_logs_path = config_dir.join(DEFAULT_ACT_LOGS_PATH);
+        Ok(Self { database_path })
+    }
 
-        Ok(Self {
-            activity_definitions_path,
-            activity_logs_path,
-        })
+    pub fn load_from_fs() -> Result<Configuration> {
+        let config_file_path = get_config_file_path()?;
+        let content = fs::read_to_string(config_file_path)?;
+
+        info!("parsing config toml");
+        let config: Configuration = toml::from_str(&content)?;
+        Ok(config)
     }
 
     pub fn to_toml_str(&self) -> Result<String> {
@@ -41,7 +42,7 @@ impl Configuration {
     }
 }
 
-pub fn get_config_file() -> Result<PathBuf> {
+pub fn get_config_file_path() -> Result<PathBuf> {
     if let Ok(config_var) = env::var(CONFIG_VAR) {
         let val = PathBuf::from(config_var);
         debug!(
@@ -67,13 +68,13 @@ pub fn get_config_file() -> Result<PathBuf> {
 }
 
 pub fn initialize_config() -> Result<()> {
-    let config_path = get_config_file()?;
+    let config_path = get_config_file_path()?;
     if let Some(parent) = config_path.parent() {
         info!("creating config dir at: {}", parent.display());
         fs::create_dir_all(parent)?;
     }
 
-    let config = Configuration::new()?;
+    let config = Configuration::create_default()?;
     let toml = config.to_toml_str()?;
     debug!("generating default config: {config:?}");
 

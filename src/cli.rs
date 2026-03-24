@@ -1,15 +1,16 @@
-use std::ops::RangeInclusive;
-
 use boat_lib::repository::Id;
-use clap::{ArgAction, Args, Parser, Subcommand, ValueEnum};
+use clap::ColorChoice;
+use clap::Parser;
+use clap::{ArgAction, Args, Subcommand, ValueEnum};
 
 #[derive(Parser)]
 #[command(
     name = "boat",
     version,
+    author = "Made by @coko7 <contact@coko7.fr>",
+    color = ColorChoice::Auto,
     about = "Basic Opinionated Activity Tracker",
-    author = "coko7",
-    long_about = None
+    help_template = "{name} {version}\n\n{about}\n\n{usage-heading}\n{usage}\n\n{all-args}\n\n{author}"
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -31,10 +32,9 @@ pub enum Commands {
     #[command(alias = "s", alias = "st", alias = "sail")]
     Start(SelectActivityArgs),
 
-    /// Manage configuration
-    #[command(alias = "c", alias = "cfg", alias = "conf")]
-    Config {},
-
+    // /// Manage configuration
+    // #[command(alias = "c", alias = "cfg", alias = "conf")]
+    // Config {},
     /// Pause/stop the current activity
     #[command(alias = "p", alias = "stop")]
     Pause,
@@ -51,9 +51,12 @@ pub enum Commands {
     #[command(alias = "g")]
     Get(PrintActivityArgs),
 
-    /// List activities and tags
+    /// List boat objects
     #[command(alias = "l", alias = "ls")]
-    List(ListActivityArgs),
+    List {
+        #[command(subcommand)]
+        command: ListSubcommand,
+    },
 
     // This is ONLY way I could find to use the 'h' short alias for help.
     #[command(alias = "h", hide = true)]
@@ -76,13 +79,35 @@ pub enum Commands {
     // ^^^ or maybe export 'x' ???
 }
 
+#[derive(Subcommand)]
+#[command(rename_all = "kebab-case")]
+pub enum ListSubcommand {
+    /// List activity logs
+    #[command(alias = "l", alias = "log")]
+    Logs(ListActivityArgs),
+
+    /// List activities
+    #[command(alias = "a", alias = "act", alias = "acts", alias = "activity")]
+    Activities(ListArgs),
+
+    /// List tags
+    #[command(alias = "t", alias = "tag")]
+    Tags(ListArgs),
+}
+
 #[derive(Args, Debug)]
-#[group(multiple = false)]
 pub struct ListActivityArgs {
     /// Only show activities matching a certain period
     #[arg(short = 'p', long = "period", value_name = "PERIOD", default_value_t = Period::Today, value_enum)]
     pub period: Period,
 
+    /// Output in JSON
+    #[arg(short = 'j', long = "json")]
+    pub use_json_format: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct ListArgs {
     /// Output in JSON
     #[arg(short = 'j', long = "json")]
     pub use_json_format: bool,
@@ -94,12 +119,14 @@ pub enum Period {
     Today,
     #[value(name = "yesterday", alias = "yes", alias = "yd")]
     Yesterday,
-    #[value(name = "week", alias = "wk")]
+    #[value(name = "this-week", alias = "wk", alias = "week", alias = "toweek")]
     ThisWeek,
-    #[value(name = "last_week")]
+    #[value(name = "last-week", alias = "last-wk", alias = "yesterweek")]
     LastWeek,
-    #[value(name = "month", alias = "mo")]
+    #[value(name = "this-month", alias = "mo", alias = "month", alias = "tomonth")]
     ThisMonth,
+    #[value(name = "last-month", alias = "last-mo", alias = "yestermonth")]
+    LastMonth,
     // #[value(name = "range")]
     // DateRange {
     //     #[arg(value_parser = range_parser)]
