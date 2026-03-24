@@ -1,6 +1,3 @@
-use tabular::{Row, Table};
-use yansi::Paint;
-
 use crate::models::{SimpleActivity, SimpleLog};
 
 pub fn convert_to_log_line(log: &SimpleLog, parent_activity: &SimpleActivity) -> Vec<String> {

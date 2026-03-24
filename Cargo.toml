@@ -1,6 +1,6 @@
 [package]
 name = "boat-cli"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 description = "Basic Opinionated Activity Tracker, a command line interface inspired by bartib"
 repository = "https://github.com/coko7/boat"
@@ -26,6 +26,10 @@ toml = "1.0.7"
 rusqlite = "0.39.0"
 chrono = { version = "0.4.44", features = ["serde"] }
 serde_json = "1.0.149"
-boat-lib = "0.3.1"
+boat-lib = "0.3.2"
 tabular = { version = "0.2.0", features = ["ansi-cell"] }
 yansi = "1.0.1"
+
+[features]
+default = []
+bundled-sqlite = ["boat-lib/bundled-sqlite"]

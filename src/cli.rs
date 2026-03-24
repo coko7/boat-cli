@@ -54,6 +54,10 @@ pub enum Commands {
     /// List activities and tags
     #[command(alias = "l", alias = "ls")]
     List(ListActivityArgs),
+
+    // This is ONLY way I could find to use the 'h' short alias for help.
+    #[command(alias = "h", hide = true)]
+    HelpExtension,
     // Edit the raw content of activity files
     // #[command(alias = "e", alias = "ed")]
     // Edit(EditFilesArgs),

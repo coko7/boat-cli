@@ -35,6 +35,22 @@ cd boat-cli
 cargo build --release
 ```
 
+### Install with a bundled version of SQLite
+
+If you are on Windows or you do not have SQLite on your system, you can install `boat` with the `bundled-sqlite` feature.
+This will increase the compilation time but guarantees a working out-of-the-box exprience.
+
+When using cargo:
+```sh
+cargo install boat-cli --features bundled-sqlite
+```
+When building from source:
+```sh
+git clone https://github.com/coko7/boat-cli.git
+cd boat-cli
+cargo build --release --features bundled-sqlite
+```
+
 ## Usage
 
 To get a feel of how `boat` can be used, you can try `boat help` to get the list of commands:
@@ -73,5 +89,6 @@ Commands:
 ```
 I really wanted to have each command start with a different character so that I could assign a single-char alias to all of them.
 That explains why some of the commands do not use a more fitting keyword.
+
 Like `stop` would have been a better command than `pause` but since it shares the same starting charcter as the `start` command, I could not use it.
 Maybe I will drop this in the future, let's see.

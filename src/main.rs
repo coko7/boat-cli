@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use boat_lib::models::activity::NewActivity;
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use log::{LevelFilter, error, info};
 use rusqlite::Connection;
 use std::process::ExitCode;
@@ -14,7 +14,7 @@ use crate::{
         Cli, CreateActivityArgs, ListActivityArgs, ModifyActivityArgs, PrintActivityArgs,
         SelectActivityArgs,
     },
-    models::{SimpleActivity, SimpleLog},
+    models::SimpleActivity,
 };
 
 mod cli;
@@ -52,7 +52,13 @@ fn process_args(args: Cli) -> Result<()> {
         cli::Commands::Get(args) => get_current(&mut conn, args),
         cli::Commands::List(args) => list_activities(&mut conn, args),
         cli::Commands::Config {} => todo!(),
+        cli::Commands::HelpExtension => print_help(),
     }
+}
+
+fn print_help() -> Result<()> {
+    Cli::command().print_help()?;
+    Ok(())
 }
 
 fn new_activity(conn: &mut Connection, args: &CreateActivityArgs) -> Result<()> {

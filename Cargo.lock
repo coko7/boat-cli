@@ -120,7 +120,7 @@ checksum = "843867be96c8daad0d758b57df9392b6d8d271134fce549de6ce169ff98a92af"
 
 [[package]]
 name = "boat-cli"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "boat-lib",
@@ -139,9 +139,9 @@ dependencies = [
 
 [[package]]
 name = "boat-lib"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "316819266703aac936e2a95576821ebd57ba334356f78d32c9c226f4ea6a7c2d"
+checksum = "cbae42e69f927cab170eeb31a2add0ba0aaf69daedecc11a5bc2a0f5c71ee5a5"
 dependencies = [
  "anyhow",
  "chrono",
