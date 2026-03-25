@@ -1,7 +1,10 @@
 use boat_lib::repository::Id;
+use chrono::NaiveDate;
 use clap::ColorChoice;
 use clap::Parser;
 use clap::{ArgAction, Args, Subcommand, ValueEnum};
+
+use crate::utils;
 
 #[derive(Parser)]
 #[command(
@@ -83,23 +86,41 @@ pub enum Commands {
 #[command(rename_all = "kebab-case")]
 pub enum ListSubcommand {
     /// List activity logs
-    #[command(alias = "l", alias = "log")]
+    #[command(name = "logs", alias = "l", alias = "log")]
     Logs(ListActivityArgs),
 
     /// List activities
-    #[command(alias = "a", alias = "act", alias = "acts", alias = "activity")]
+    #[command(
+        name = "acts",
+        alias = "act",
+        alias = "a",
+        alias = "activity",
+        alias = "activities"
+    )]
     Activities(ListArgs),
 
     /// List tags
-    #[command(alias = "t", alias = "tag")]
+    #[command(name = "tags", alias = "t", alias = "tag")]
     Tags(ListArgs),
 }
 
 #[derive(Args, Debug)]
 pub struct ListActivityArgs {
-    /// Only show activities matching a certain period
-    #[arg(short = 'p', long = "period", value_name = "PERIOD", default_value_t = Period::Today, value_enum)]
+    /// Restrict to entries starting in the given <PERIOD>
+    #[arg(short = 'p', long = "period", value_name = "PERIOD", default_value_t = Period::Today, value_enum, conflicts_with_all = ["from", "to", "date"])]
     pub period: Period,
+
+    /// Restrict to entries starting after <DATE> (YYYY-MM-DD format)
+    #[arg(short = 'f', long = "from", value_name = "DATE", value_parser = utils::date::parse_date, conflicts_with = "date")]
+    pub from: Option<NaiveDate>,
+
+    /// Restrict to entries starting before <DATE> (YYYY-MM-DD format)
+    #[arg(short = 't', long = "to", value_name = "DATE", value_parser = utils::date::parse_date, conflicts_with = "date")]
+    pub to: Option<NaiveDate>,
+
+    /// Restrict to entries starting and ending on <DATE> (YYYY-MM-DD format)
+    #[arg(short = 'd', long = "date", value_name = "DATE", value_parser = utils::date::parse_date, conflicts_with_all = ["period", "from", "to"])]
+    pub date: Option<NaiveDate>,
 
     /// Output in JSON
     #[arg(short = 'j', long = "json")]
@@ -115,23 +136,32 @@ pub struct ListArgs {
 
 #[derive(ValueEnum, Clone, Debug)]
 pub enum Period {
-    #[value(name = "today", alias = "tod", alias = "td")]
+    #[value(name = "today", alias = "td")]
     Today,
-    #[value(name = "yesterday", alias = "yes", alias = "yd")]
+    #[value(name = "yesterday", alias = "yd", alias = "ytd")]
     Yesterday,
-    #[value(name = "this-week", alias = "wk", alias = "week", alias = "toweek")]
+    #[value(name = "this-week", alias = "tw", alias = "twk")]
     ThisWeek,
-    #[value(name = "last-week", alias = "last-wk", alias = "yesterweek")]
+    #[value(
+        name = "last-week",
+        alias = "lw",
+        alias = "lwk",
+        alias = "yesterweek",
+        alias = "yw",
+        alias = "ywk"
+    )]
     LastWeek,
-    #[value(name = "this-month", alias = "mo", alias = "month", alias = "tomonth")]
+    #[value(name = "this-month", alias = "tm", alias = "tmo")]
     ThisMonth,
-    #[value(name = "last-month", alias = "last-mo", alias = "yestermonth")]
+    #[value(
+        name = "last-month",
+        alias = "lm",
+        alias = "lmo",
+        alias = "yestermonth",
+        alias = "ym",
+        alias = "ymo"
+    )]
     LastMonth,
-    // #[value(name = "range")]
-    // DateRange {
-    //     #[arg(value_parser = range_parser)]
-    //     range: RangeInclusive<u32>,
-    // },
 }
 
 #[derive(Args, Debug)]

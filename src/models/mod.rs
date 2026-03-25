@@ -2,7 +2,7 @@ use tabular::{Row, Table};
 use yansi::Paint;
 
 pub mod activity;
-pub mod activity_with_log;
+pub mod activity_log;
 pub mod log;
 pub mod tag;
 

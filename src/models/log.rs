@@ -2,7 +2,7 @@ use boat_lib::models::log::Log as DatabaseLog;
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PrintableLog {
     pub starts_at: DateTime<Local>,
     pub ends_at: Option<DateTime<Local>>,

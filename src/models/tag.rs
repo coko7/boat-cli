@@ -25,7 +25,7 @@ impl RowPrintable for PrintableTag {
     }
 
     fn header_names() -> Vec<String> {
-        vec!["ID", "Name"].iter().map(|s| s.to_string()).collect()
+        ["ID", "Name"].iter().map(|s| s.to_string()).collect()
     }
 
     fn row_values(&self) -> Vec<String> {

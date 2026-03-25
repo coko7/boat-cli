@@ -1,45 +1,26 @@
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate};
 
-use crate::models::{activity_with_log::PrintableActivityWithLogs, log::PrintableLog};
-
-pub fn convert_to_log_line(
-    log: &PrintableLog,
-    parent_activity: &PrintableActivityWithLogs,
-) -> Vec<String> {
-    let duration = log.duration_sec();
-
-    vec![
-        parent_activity.id.to_string(),
-        parent_activity.name.clone(),
-        parent_activity.description.clone().unwrap_or_default(),
-        parent_activity.tags_str(),
-        log.starts_at.format("%H:%M").to_string(),
-        log.ends_at
-            .map(|t| t.format("%H:%M").to_string())
-            .unwrap_or("-".to_string()),
-        format_duration(duration),
-    ]
-}
-
-pub fn format_duration(seconds: i64) -> String {
-    if seconds < 60 {
-        return format!("{seconds}s");
-    }
-
+pub fn pretty_format_duration(mut seconds: i64) -> String {
     let hours = seconds / 3600;
-    let seconds = seconds - hours * 3600;
+    seconds %= 3600;
 
     let minutes = seconds / 60;
-    let seconds = seconds - minutes * 60;
+    seconds %= 60;
 
-    let _seconds = seconds % 60;
+    let mut parts = Vec::new();
 
-    let mut parts = vec![];
     if hours > 0 {
-        parts.push(format!("{hours}h"))
+        parts.push(format!("{hours}h"));
     }
 
-    parts.push(format!("{minutes}m"));
+    if minutes > 0 || hours > 0 {
+        parts.push(format!("{minutes}m"));
+    }
+
+    if parts.len() < 2 && (seconds > 0 || parts.is_empty()) {
+        parts.push(format!("{seconds}s"));
+    }
+
     parts.join(" ")
 }
 
@@ -90,11 +71,18 @@ where
     let other_week_year = other_week_iso.year();
     let other_week = other_week_iso.week();
 
-    // Previous ISO week, handling year boundary via 28 Dec trick
     if this_week > 1 {
         other_week_year == this_week_year && other_week == this_week - 1
     } else {
         let last_year = this_week_year - 1;
+
+        // Find previous ISO week by handling year boundary using the December 28 trick:
+        // - ISO weeks start with Monday and end on Sunday.
+        // - Each week's year is the Gregorian year in which the Thursday falls.
+        // - The first week of the year, hence, always contains January 4.
+        // - This means 7 days before is guaranteed to be the previous year.
+        // - 7 days before Jan 4 gives us Dec 28.
+        // Learn more: https://en.wikipedia.org/wiki/ISO_week_date
         let last_week_of_last_year = NaiveDate::from_ymd_opt(last_year, 12, 28)
             .unwrap()
             .iso_week()
@@ -135,4 +123,9 @@ where
 
     let other = other_dt.date_naive();
     other.year() == last_month_year && other.month() == last_month
+}
+
+pub fn parse_date(s: &str) -> Result<NaiveDate, String> {
+    NaiveDate::parse_from_str(s, "%Y-%m-%d")
+        .map_err(|_| format!("invalid date '{s}', expected format YYYY-MM-DD"))
 }
