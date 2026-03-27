@@ -19,6 +19,21 @@ impl PrintableTag {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn parse_from_tag_works() {
+        let db_tag = DatabaseTag {
+            id: 1,
+            name: "foo".to_string(),
+        };
+        let tag = PrintableTag::from_tag(&db_tag);
+        assert_eq!(tag.id, 1);
+        assert_eq!(tag.name, "foo");
+    }
+}
+
 impl RowPrintable for PrintableTag {
     fn row_spec() -> String {
         "{:>}  {:<}".to_string()

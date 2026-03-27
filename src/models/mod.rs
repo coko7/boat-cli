@@ -14,6 +14,9 @@ pub trait RowPrintable {
     fn row_spec() -> String;
     fn header_names() -> Vec<String>;
     fn row_values(&self) -> Vec<String>;
+    fn style_cell(&self, value: String) -> String {
+        value
+    }
 }
 
 impl<T> TablePrintable for Vec<T>
@@ -32,7 +35,8 @@ where
         for item in self.iter() {
             let mut row = Row::new();
             for value in item.row_values() {
-                row.add_ansi_cell(value.to_string());
+                let styled = item.style_cell(value.to_string());
+                row.add_ansi_cell(styled);
             }
             table.add_row(row);
         }

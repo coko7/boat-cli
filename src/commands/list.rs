@@ -1,74 +1,81 @@
 use anyhow::Result;
-use boat_lib::repository::{activities_repository as activities, tags_repository as tags};
+use boat_lib::repository::activities_repository as activities;
+use chrono::Local;
 use rusqlite::Connection;
-use serde::Serialize;
-use std::cmp::Reverse;
+use std::{cmp::Reverse, collections::BTreeMap};
 
 use crate::{
-    cli,
-    models::{
-        RowPrintable, TablePrintable, activity::PrintableActivity,
-        activity_log::PrintableActivityLog, tag::PrintableTag,
-    },
-    utils,
+    cli::{self, Period},
+    models::{activity::PrintableActivity, activity_log::PrintableActivityLog},
+    utils::{self, date::DateTimeRenderMode},
 };
 
-pub fn list(conn: &mut Connection, command: &cli::ListSubcommand) -> Result<()> {
-    match command {
-        cli::ListSubcommand::Logs(args) => list_activity_logs(conn, args),
-        cli::ListSubcommand::Activities(args) => list_activities(conn, args),
-        cli::ListSubcommand::Tags(args) => list_tags(conn, args),
-    }
-}
-
-pub fn list_printable_items<T: RowPrintable + Serialize>(
-    items: Vec<T>,
-    show_as_json: bool,
-) -> Result<()> {
-    if show_as_json {
-        let json = serde_json::to_string(&items)?;
-        println!("{json}");
-        return Ok(());
+pub fn list_activities(conn: &mut Connection, args: &cli::ListActivityArgs) -> Result<()> {
+    if args.activities_only {
+        return list_activities_only(conn, args.use_json_format);
     }
 
-    let table = items.to_printable_table();
-    println!("{table}");
-    Ok(())
+    list_activity_logs(conn, args)
 }
 
-fn list_tags(conn: &mut Connection, args: &cli::ListArgs) -> Result<()> {
-    let mut all_tags: Vec<_> = tags::get_all(conn)?
-        .iter()
-        .map(PrintableTag::from_tag)
-        .collect();
-    all_tags.sort_by_key(|t| Reverse(t.id));
-
-    list_printable_items(all_tags, args.use_json_format)
-}
-
-fn list_activities(conn: &mut Connection, args: &cli::ListArgs) -> Result<()> {
+fn list_activities_only(conn: &mut Connection, use_json: bool) -> Result<()> {
     let mut all_acts: Vec<_> = activities::get_all(conn)?
         .iter()
         .map(PrintableActivity::from_activity)
         .collect();
     all_acts.sort_by_key(|a| Reverse(a.id));
 
-    list_printable_items(all_acts, args.use_json_format)
+    utils::common::list_printable_items(all_acts, use_json)
+}
+
+fn matches_period(al: &PrintableActivityLog, period: &Period) -> bool {
+    match period {
+        cli::Period::Today => utils::date::is_today(al.log.starts_at),
+        cli::Period::Yesterday => utils::date::is_yesterday(al.log.starts_at),
+        cli::Period::ThisWeek => utils::date::is_this_week(al.log.starts_at),
+        cli::Period::LastWeek => utils::date::is_last_week(al.log.starts_at),
+        cli::Period::ThisMonth => utils::date::is_this_month(al.log.starts_at),
+        cli::Period::LastMonth => utils::date::is_last_month(al.log.starts_at),
+    }
 }
 
 fn list_activity_logs(conn: &mut Connection, args: &cli::ListActivityArgs) -> Result<()> {
-    let all: Vec<_> = activities::get_all(conn)?
+    let mut act_logs: Vec<_> = activities::get_all(conn)?
         .iter()
         .flat_map(PrintableActivityLog::from_activity)
-        .filter(|al| match args.period {
-            cli::Period::Today => utils::date::is_today(al.log.starts_at),
-            cli::Period::Yesterday => utils::date::is_yesterday(al.log.starts_at),
-            cli::Period::ThisWeek => utils::date::is_this_week(al.log.starts_at),
-            cli::Period::LastWeek => utils::date::is_last_week(al.log.starts_at),
-            cli::Period::ThisMonth => utils::date::is_this_month(al.log.starts_at),
-            cli::Period::LastMonth => utils::date::is_last_month(al.log.starts_at),
-        })
+        .filter(|al| matches_period(al, &args.period))
         .collect();
+    act_logs.sort_by_key(|al| al.log.starts_at);
 
-    list_printable_items(all, args.use_json_format)
+    if args.no_grouping {
+        return utils::common::list_printable_items(act_logs.to_vec(), args.use_json_format);
+    }
+
+    let act_logs_by_date = group_by_date(&act_logs);
+
+    if args.use_json_format {
+        let json = serde_json::to_string(&act_logs_by_date)?;
+        println!("{json}");
+        return Ok(());
+    }
+
+    for (date, act_logs) in act_logs_by_date.iter() {
+        println!("{date}");
+        utils::common::list_printable_items(act_logs.to_vec(), false)?;
+    }
+    Ok(())
+}
+
+fn group_by_date(
+    activity_logs: &[PrintableActivityLog],
+) -> BTreeMap<String, Vec<PrintableActivityLog>> {
+    let mut groups: BTreeMap<_, Vec<_>> = BTreeMap::new();
+
+    for act_log in activity_logs {
+        let latest_dt = act_log.log.ends_at.unwrap_or(Local::now());
+        let key = DateTimeRenderMode::DateOnly.render_date_time(latest_dt);
+        groups.entry(key).or_default().push(act_log.clone());
+    }
+
+    groups
 }
