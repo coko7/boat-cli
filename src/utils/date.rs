@@ -24,6 +24,28 @@ pub fn pretty_format_duration(mut seconds: i64) -> String {
     parts.join(" ")
 }
 
+pub enum DateTimeRenderMode {
+    TimeOnly,
+    DateOnly,
+    DateAndTime,
+}
+
+impl DateTimeRenderMode {
+    pub fn render_date_time<Tz>(&self, dt: chrono::DateTime<Tz>) -> String
+    where
+        Tz: chrono::TimeZone,
+        Tz::Offset: std::fmt::Display,
+    {
+        let fmt = match self {
+            DateTimeRenderMode::TimeOnly => "%H:%M",
+            DateTimeRenderMode::DateOnly => "%Y-%m-%d",
+            DateTimeRenderMode::DateAndTime => "%Y-%m-%d %H:%M",
+        };
+
+        dt.format(fmt).to_string()
+    }
+}
+
 pub fn is_today<Tz>(dt: DateTime<Tz>) -> bool
 where
     Tz: chrono::TimeZone,

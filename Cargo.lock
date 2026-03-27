@@ -126,6 +126,7 @@ dependencies = [
  "boat-lib",
  "chrono",
  "clap",
+ "clap-verbosity-flag",
  "directories",
  "env_logger",
  "log",
@@ -139,9 +140,9 @@ dependencies = [
 
 [[package]]
 name = "boat-lib"
-version = "0.3.2"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbae42e69f927cab170eeb31a2add0ba0aaf69daedecc11a5bc2a0f5c71ee5a5"
+checksum = "54a959a8c5ccc91cf1ad19110d16a1e55b14ad97fe1b08416800efbf4b2bf74b"
 dependencies = [
  "anyhow",
  "chrono",
@@ -196,6 +197,16 @@ checksum = "b193af5b67834b676abd72466a96c1024e6a6ad978a1f484bd90b85c94041351"
 dependencies = [
  "clap_builder",
  "clap_derive",
+]
+
+[[package]]
+name = "clap-verbosity-flag"
+version = "3.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d92b1fab272fe943881b77cc6e920d6543e5b1bfadbd5ed81c7c5a755742394"
+dependencies = [
+ "clap",
+ "log",
 ]
 
 [[package]]

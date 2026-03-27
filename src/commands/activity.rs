@@ -4,7 +4,7 @@ use rusqlite::Connection;
 
 use crate::{
     cli,
-    models::{TablePrintable, activity_log::PrintableActivityLog},
+    models::{TablePrintable, activity::PrintableActivity, activity_log::PrintableActivityLog},
 };
 
 pub fn create(conn: &mut Connection, args: &cli::CreateActivityArgs) -> Result<()> {
@@ -17,6 +17,13 @@ pub fn create(conn: &mut Connection, args: &cli::CreateActivityArgs) -> Result<(
     let created = activities::create(conn, new_activity)?;
     if args.auto_start {
         activities::start(conn, created.id)?;
+    }
+
+    let act = PrintableActivity::from_activity(&created);
+    if args.use_json_format {
+        let json = serde_json::to_string(&act)?;
+        println!("{json}");
+        return Ok(());
     }
 
     println!("{}", created.id);
@@ -87,6 +94,19 @@ pub fn get_current(conn: &mut Connection, args: &cli::PrintActivityArgs) -> Resu
             println!("{table}");
         }
         None => println!("no current activity"),
+    }
+    Ok(())
+}
+
+pub fn cancel_current(conn: &mut Connection) -> Result<()> {
+    match activities::get_current_ongoing(conn)? {
+        Some(act) => {
+            activities::cancel_current(conn)?;
+            println!("cancelled activity: {act:?}");
+        }
+        None => {
+            println!("no current activity");
+        }
     }
     Ok(())
 }

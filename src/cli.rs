@@ -18,26 +18,32 @@ use crate::utils;
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
-    //
-    // #[command(flatten)]
-    // pub verbose: clap_verbosity_flag::Verbosity,
+
+    #[command(flatten)]
+    pub verbose: clap_verbosity_flag::Verbosity,
 }
 
 #[derive(Subcommand)]
 #[command(rename_all = "kebab-case")]
 pub enum Commands {
     /// Create a new activity
-    #[command(alias = "n")]
+    #[command(alias = "n", alias = "create")]
     New(CreateActivityArgs),
 
-    // create a backup command
     /// Start/resume an activity
-    #[command(alias = "s", alias = "st", alias = "sail")]
+    #[command(
+        alias = "s",
+        alias = "st",
+        alias = "sail",
+        alias = "continue",
+        alias = "resume"
+    )]
     Start(SelectActivityArgs),
 
-    // /// Manage configuration
-    // #[command(alias = "c", alias = "cfg", alias = "conf")]
-    // Config {},
+    /// Cancel the current activity
+    #[command(alias = "c", alias = "can")]
+    Cancel,
+
     /// Pause/stop the current activity
     #[command(alias = "p", alias = "stop")]
     Pause,
@@ -47,18 +53,28 @@ pub enum Commands {
     Modify(ModifyActivityArgs),
 
     /// Delete an activity
-    #[command(alias = "d", alias = "del")]
+    #[command(
+        alias = "d",
+        alias = "del",
+        alias = "rm",
+        alias = "rem",
+        alias = "remove"
+    )]
     Delete(SelectActivityArgs),
 
     /// Get the current activity
     #[command(alias = "g")]
     Get(PrintActivityArgs),
 
-    /// List boat objects
+    /// List activities
     #[command(alias = "l", alias = "ls")]
-    List {
+    List(ListActivityArgs),
+
+    /// Query boat objects
+    #[command(alias = "q")]
+    Query {
         #[command(subcommand)]
-        command: ListSubcommand,
+        command: QuerySubcommand,
     },
 
     // This is ONLY way I could find to use the 'h' short alias for help.
@@ -84,12 +100,12 @@ pub enum Commands {
 
 #[derive(Subcommand)]
 #[command(rename_all = "kebab-case")]
-pub enum ListSubcommand {
-    /// List activity logs
+pub enum QuerySubcommand {
+    /// Manage logs
     #[command(name = "logs", alias = "l", alias = "log")]
     Logs(ListActivityArgs),
 
-    /// List activities
+    /// Manage activities
     #[command(
         name = "acts",
         alias = "act",
@@ -99,7 +115,7 @@ pub enum ListSubcommand {
     )]
     Activities(ListArgs),
 
-    /// List tags
+    /// Manage tags
     #[command(name = "tags", alias = "t", alias = "tag")]
     Tags(ListArgs),
 }
@@ -107,7 +123,7 @@ pub enum ListSubcommand {
 #[derive(Args, Debug)]
 pub struct ListActivityArgs {
     /// Restrict to entries starting in the given <PERIOD>
-    #[arg(short = 'p', long = "period", value_name = "PERIOD", default_value_t = Period::Today, value_enum, conflicts_with_all = ["from", "to", "date"])]
+    #[arg(short = 'p', long = "period", value_name = "PERIOD", default_value_t = Period::ThisWeek, value_enum, conflicts_with_all = ["from", "to", "date"])]
     pub period: Period,
 
     /// Restrict to entries starting after <DATE> (YYYY-MM-DD format)
@@ -121,6 +137,14 @@ pub struct ListActivityArgs {
     /// Restrict to entries starting and ending on <DATE> (YYYY-MM-DD format)
     #[arg(short = 'd', long = "date", value_name = "DATE", value_parser = utils::date::parse_date, conflicts_with_all = ["period", "from", "to"])]
     pub date: Option<NaiveDate>,
+
+    /// Only show activities, do not include their respective logs
+    #[arg(short = 'a', long = "activities-only", conflicts_with = "no_grouping")]
+    pub activities_only: bool,
+
+    /// Do not group activities by date
+    #[arg(short = 'n', long = "no-grouping", conflicts_with = "activities_only")]
+    pub no_grouping: bool,
 
     /// Output in JSON
     #[arg(short = 'j', long = "json")]
@@ -136,11 +160,11 @@ pub struct ListArgs {
 
 #[derive(ValueEnum, Clone, Debug)]
 pub enum Period {
-    #[value(name = "today", alias = "td")]
+    #[value(name = "today", alias = "td", alias = "tod")]
     Today,
     #[value(name = "yesterday", alias = "yd", alias = "ytd")]
     Yesterday,
-    #[value(name = "this-week", alias = "tw", alias = "twk")]
+    #[value(name = "this-week", alias = "tw", alias = "twk", alias = "wk")]
     ThisWeek,
     #[value(
         name = "last-week",
@@ -151,7 +175,7 @@ pub enum Period {
         alias = "ywk"
     )]
     LastWeek,
-    #[value(name = "this-month", alias = "tm", alias = "tmo")]
+    #[value(name = "this-month", alias = "tm", alias = "tmo", alias = "mo")]
     ThisMonth,
     #[value(
         name = "last-month",
@@ -189,6 +213,10 @@ impl Default for PrintActivityArgs {
 pub struct SelectActivityArgs {
     /// ID of the activity
     pub activity_id: Id,
+
+    /// Output in JSON
+    #[arg(short = 'j', long = "json")]
+    pub use_json_format: bool,
 }
 
 #[derive(Args, Debug)]
@@ -207,6 +235,10 @@ pub struct CreateActivityArgs {
     /// Start the new activity automatically
     #[arg(short = 's', long = "start")]
     pub auto_start: bool,
+
+    /// Output in JSON
+    #[arg(short = 'j', long = "json")]
+    pub use_json_format: bool,
 }
 
 #[derive(Args, Debug)]

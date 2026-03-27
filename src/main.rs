@@ -16,7 +16,7 @@ fn main() -> ExitCode {
     env_logger::Builder::new()
         .filter_module("boat-cli", LevelFilter::Warn)
         .filter_module("boat-lib", LevelFilter::Debug)
-        // .filter_level(args.verbose.log_level_filter())
+        .filter_level(args.verbose.log_level_filter())
         .init();
 
     info!("process cli args");
@@ -48,9 +48,10 @@ fn process_args(args: Cli) -> Result<()> {
         cli::Commands::Modify(args) => commands::activity::modify(&mut conn, args),
         cli::Commands::Delete(args) => commands::activity::delete(&mut conn, args),
         cli::Commands::Get(args) => commands::activity::get_current(&mut conn, args),
-        // cli::Commands::Config {} => todo!(),
         cli::Commands::HelpExtension => print_help(),
-        cli::Commands::List { command } => commands::list::list(&mut conn, command),
+        cli::Commands::Query { command } => commands::query::query_subcommand(&mut conn, command),
+        cli::Commands::Cancel => commands::activity::cancel_current(&mut conn),
+        cli::Commands::List(args) => commands::list::list_activities(&mut conn, args),
     }
 }
 
