@@ -3,8 +3,10 @@
 `boat` - A **B**asic **O**pinionated **A**ctivity **T**racker, inspired by [bartib](https://github.com/nikolassv/bartib).
 
 Like its name implies, `boat` allows you to track the time you spend on everyday tasks.
+
 It has mainly been designed to be easy to embed in custom bash scripts so that you can augment it with fuzzy-finding.
-That said, if you plan to use the CLI directly (without external scripts), it also benefits from a [variety of handy aliases](#usage).
+That said, if you plan to use the CLI directly (without external scripts), it also benefits from a [variety of handy aliases](#-usage).
+
 `boat` stores its data in a SQLite database file which is kept in the config directory by default (`.config/boat/boat.db`).
 
 This repository contains only the code for the command line application.

@@ -13,15 +13,31 @@ pub fn pretty_format_duration(mut seconds: i64) -> String {
         parts.push(format!("{hours}h"));
     }
 
-    if minutes > 0 || hours > 0 {
+    if minutes > 0 {
         parts.push(format!("{minutes}m"));
     }
 
-    if parts.len() < 2 && (seconds > 0 || parts.is_empty()) {
+    if hours == 0 && minutes == 0 {
         parts.push(format!("{seconds}s"));
     }
 
     parts.join(" ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pretty_format_duration() {
+        assert_eq!(&pretty_format_duration(0), "0s");
+        assert_eq!(&pretty_format_duration(42), "42s");
+        assert_eq!(&pretty_format_duration(60), "1m");
+        assert_eq!(&pretty_format_duration(61), "1m");
+        assert_eq!(&pretty_format_duration(3600), "1h");
+        assert_eq!(&pretty_format_duration(3601), "1h");
+        assert_eq!(&pretty_format_duration(3661), "1h 1m");
+    }
 }
 
 pub enum DateTimeRenderMode {
@@ -150,4 +166,22 @@ where
 pub fn parse_date(s: &str) -> Result<NaiveDate, String> {
     NaiveDate::parse_from_str(s, "%Y-%m-%d")
         .map_err(|_| format!("invalid date '{s}', expected format YYYY-MM-DD"))
+}
+
+#[cfg(test)]
+mod parse_date_tests {
+    use super::*;
+
+    #[test]
+    fn parse_date_valid_should_succeed() {
+        assert_eq!(
+            parse_date("2023-08-14").unwrap(),
+            NaiveDate::from_ymd_opt(2023, 8, 14).unwrap()
+        );
+    }
+    #[test]
+    fn parse_date_fails_invalid_should_fail() {
+        let e = parse_date("nope").unwrap_err();
+        assert!(e.contains("invalid date"));
+    }
 }

@@ -30,6 +30,11 @@ boat-lib = "0.4.0"
 tabular = { version = "0.2.0", features = ["ansi-cell"] }
 yansi = "1.0.1"
 
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.8"
+
 [features]
 default = []
 bundled-sqlite = ["boat-lib/bundled-sqlite"]

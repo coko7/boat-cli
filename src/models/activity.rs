@@ -34,6 +34,31 @@ impl PrintableActivity {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tags_str_renders_comma_separated() {
+        let mut tags = HashSet::new();
+        tags.insert("foo".to_owned());
+        tags.insert("bar".to_owned());
+
+        let act = PrintableActivity {
+            id: 42,
+            name: "n".to_owned(),
+            description: None,
+            ongoing: false,
+            tags,
+        };
+        let tags_str = act.tags_str();
+
+        assert!(tags_str.contains("foo"));
+        assert!(tags_str.contains("bar"));
+        assert!(tags_str.find(',').is_some());
+    }
+}
+
 impl RowPrintable for PrintableActivity {
     fn row_spec() -> String {
         "{:>}  {:<}  {:<}  {:<}  {:^}".to_string()
