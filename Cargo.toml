@@ -1,6 +1,6 @@
 [package]
 name = "boat-cli"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2024"
 description = "Basic Opinionated Activity Tracker, a command line interface inspired by bartib"
 repository = "https://github.com/coko7/boat"
@@ -29,6 +29,11 @@ serde_json = "1.0.149"
 boat-lib = "0.4.0"
 tabular = { version = "0.2.0", features = ["ansi-cell"] }
 yansi = "1.0.1"
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.8"
 
 [features]
 default = []

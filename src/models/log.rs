@@ -15,9 +15,29 @@ impl PrintableLog {
             ends_at: log.ends_at.map(|t| t.with_timezone(&Local)),
         }
     }
-
     pub fn duration_sec(&self) -> i64 {
         let end = self.ends_at.unwrap_or(Local::now());
         (end - self.starts_at).num_seconds()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_duration_sec() {
+        let now = Local::now();
+        let log = PrintableLog {
+            starts_at: now,
+            ends_at: Some(now + chrono::Duration::seconds(60)),
+        };
+        assert_eq!(log.duration_sec(), 60);
+
+        let log = PrintableLog {
+            starts_at: now,
+            ends_at: None,
+        };
+        assert!(log.duration_sec() >= 0); // Should not panic
     }
 }
