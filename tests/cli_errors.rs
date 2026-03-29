@@ -55,5 +55,5 @@ fn list_with_invalid_date_input_should_fail() {
         .arg("not-a-date");
     cmd.assert()
         .failure()
-        .stderr(predicates::str::contains("invalid date"));
+        .stderr(predicates::str::contains("Provide either a range"));
 }

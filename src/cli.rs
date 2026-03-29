@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use boat_lib::repository::Id;
 use chrono::NaiveDate;
 use clap::ColorChoice;
@@ -120,35 +122,80 @@ pub enum QuerySubcommand {
     Tags(ListArgs),
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum DateInput {
+    Single(NaiveDate),
+    Range {
+        start: NaiveDate,
+        end: NaiveDate,
+        inclusive: bool,
+    },
+}
+
+impl DateInput {
+    const ERR_MSG: &'static str =
+        "Provide either a range (YYYY-MM-DD..YYYY-MM-DD) or a single date (YYYY-MM-DD)";
+}
+
+impl FromStr for DateInput {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Match range
+        if let Some((start, end)) = s.split_once("..") {
+            let start = utils::date::parse_date(start).map_err(|_| Self::ERR_MSG)?;
+            let (end, inclusive) = match end.strip_prefix('=') {
+                Some(substr) => (substr, true),
+                None => (end, false),
+            };
+            let end = utils::date::parse_date(end).map_err(|_| Self::ERR_MSG)?;
+
+            if start > end {
+                return Err("DateInput: start cannot be after end when using range".to_string());
+            }
+
+            return Ok(DateInput::Range {
+                start,
+                end,
+                inclusive,
+            });
+        }
+
+        // Single date
+        let date = utils::date::parse_date(s).map_err(|_| Self::ERR_MSG)?;
+        Ok(DateInput::Single(date))
+    }
+}
+
 #[derive(Args, Debug)]
 pub struct ListActivityArgs {
     /// Restrict to entries starting in the given <PERIOD>
-    #[arg(short = 'p', long = "period", value_name = "PERIOD", default_value_t = Period::ThisWeek, value_enum, conflicts_with_all = ["from", "to", "date"])]
+    #[arg(short = 'p', long = "period", value_name = "PERIOD", default_value_t = Period::ThisWeek, value_enum, conflicts_with = "date_range")]
     pub period: Period,
 
-    /// Restrict to entries starting after <DATE> (YYYY-MM-DD format)
-    #[arg(short = 'f', long = "from", value_name = "DATE", value_parser = utils::date::parse_date, conflicts_with = "date")]
-    pub from: Option<NaiveDate>,
+    /// Restrict to entries matching <DATE_RANGE> (YYYY-MM-DD format)
+    #[arg(
+        short = 'd',
+        long = "date",
+        value_name = "DATE_RANGE",
+        conflicts_with = "period"
+    )]
+    pub date_range: Option<DateInput>,
 
-    /// Restrict to entries starting before <DATE> (YYYY-MM-DD format)
-    #[arg(short = 't', long = "to", value_name = "DATE", value_parser = utils::date::parse_date, conflicts_with = "date")]
-    pub to: Option<NaiveDate>,
+    /// Show a per-activity summary instead of listing all logs
+    #[arg(short = 's', long = "summary", conflicts_with = "no_grouping")]
+    pub show_summary: bool,
 
-    /// Restrict to entries starting and ending on <DATE> (YYYY-MM-DD format)
-    #[arg(short = 'd', long = "date", value_name = "DATE", value_parser = utils::date::parse_date, conflicts_with_all = ["period", "from", "to"])]
-    pub date: Option<NaiveDate>,
-
-    /// Only show activities, do not include their respective logs
-    #[arg(short = 'a', long = "activities-only", conflicts_with = "no_grouping")]
-    pub activities_only: bool,
-
-    /// Do not group activities by date
-    #[arg(short = 'n', long = "no-grouping", conflicts_with = "activities_only")]
+    /// Do not group activity logs by date
+    #[arg(short = 'n', long = "no-grouping", conflicts_with = "show_summary")]
     pub no_grouping: bool,
 
     /// Output in JSON
     #[arg(short = 'j', long = "json")]
     pub use_json_format: bool,
+    // /// Only show tags
+    // #[arg(short = 't', long = "tags-only", conflicts_with = "no_grouping")]
+    // pub tags_only: bool,
 }
 
 #[derive(Args, Debug)]

@@ -4,7 +4,11 @@ use rusqlite::Connection;
 
 use crate::{
     cli,
-    models::{TablePrintable, activity::PrintableActivity, activity_log::PrintableActivityLog},
+    models::{
+        TablePrintable,
+        activity::{PrintableActivity, SimpleActivity},
+        activity_log::PrintableActivityLog,
+    },
 };
 
 pub fn create(conn: &mut Connection, args: &cli::CreateActivityArgs) -> Result<()> {
@@ -19,7 +23,8 @@ pub fn create(conn: &mut Connection, args: &cli::CreateActivityArgs) -> Result<(
         activities::start(conn, created.id)?;
     }
 
-    let act = PrintableActivity::from_activity(&created);
+    let simp_act = SimpleActivity::from_db_activity(&created);
+    let act = PrintableActivity::from_activity_and_logs(&simp_act, &created.logs);
     if args.use_json_format {
         let json = serde_json::to_string(&act)?;
         println!("{json}");
@@ -43,7 +48,8 @@ pub fn start(conn: &mut Connection, args: &cli::SelectActivityArgs) -> Result<()
 
 pub fn pause_current(conn: &mut Connection) -> Result<()> {
     if let Some(current) = activities::get_current_ongoing(conn)? {
-        let current = PrintableActivityLog::from_activity(&current);
+        let simp_act = SimpleActivity::from_db_activity(&current);
+        let current = PrintableActivity::from_activity_and_logs(&simp_act, &current.logs);
         activities::stop_current(conn)?;
         println!("stopped activity: {current:?}");
     } else {
@@ -75,21 +81,24 @@ pub fn delete(conn: &mut Connection, args: &cli::SelectActivityArgs) -> Result<(
 pub fn get_current(conn: &mut Connection, args: &cli::PrintActivityArgs) -> Result<()> {
     let act = activities::get_current_ongoing(conn)?;
     match act {
-        Some(v) => {
-            let activity_logs = PrintableActivityLog::from_activity(&v);
-            let ongoing_log = activity_logs
+        Some(current) => {
+            let ongoing_log = current
+                .logs
                 .iter()
-                .find(|l| l.log.ends_at.is_none())
+                .find(|l| l.ends_at.is_none())
                 .context("there should be an ongoing log")?
                 .clone();
 
+            let simp_act = SimpleActivity::from_db_activity(&current);
+            let activity_log = PrintableActivityLog::from_activity_and_log(&simp_act, &ongoing_log);
+
             if args.use_json_format {
-                let json = serde_json::to_string(&ongoing_log)?;
+                let json = serde_json::to_string(&activity_log)?;
                 println!("{json}");
                 return Ok(());
             }
 
-            let items = vec![ongoing_log];
+            let items = vec![activity_log];
             let table = items.to_printable_table();
             println!("{table}");
         }

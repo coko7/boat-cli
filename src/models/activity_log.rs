@@ -1,28 +1,24 @@
-use boat_lib::models::activity::Activity as DatabaseActivity;
+use boat_lib::models::log::Log as DatabaseLog;
 use serde::{Deserialize, Serialize};
 use yansi::Paint;
 
 use crate::{
-    models::{RowPrintable, activity::PrintableActivity, log::PrintableLog},
+    models::{RowPrintable, activity::SimpleActivity, log::PrintableLog},
     utils::{self, date::DateTimeRenderMode},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PrintableActivityLog {
     pub log: PrintableLog,
-    pub activity: PrintableActivity,
+    pub activity: SimpleActivity,
 }
 
 impl PrintableActivityLog {
-    pub fn from_activity(activity: &DatabaseActivity) -> Vec<Self> {
-        activity
-            .logs
-            .iter()
-            .map(|l| PrintableActivityLog {
-                log: PrintableLog::from_log(l),
-                activity: PrintableActivity::from_activity(activity),
-            })
-            .collect()
+    pub fn from_activity_and_log(activity: &SimpleActivity, log: &DatabaseLog) -> Self {
+        Self {
+            log: PrintableLog::from_log(log),
+            activity: activity.clone(),
+        }
     }
 }
 
