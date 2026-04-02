@@ -120,5 +120,5 @@ pub fn current_activity_msg(activity: &DatabaseActivity) -> Result<String> {
 }
 
 pub fn no_current_act_msg() -> String {
-    "no current activity".italic().to_string()
+    "no current activity".to_string()
 }

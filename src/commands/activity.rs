@@ -129,7 +129,7 @@ pub fn get_current(conn: &mut Connection, args: &cli::PrintActivityArgs) -> Resu
 
             println!("{}", utils::display::current_activity_msg(&current)?);
         }
-        None => println!("{}", utils::display::no_current_act_msg()),
+        None => bail!(utils::display::no_current_act_msg()),
     }
     Ok(())
 }
@@ -141,7 +141,7 @@ pub fn cancel_current(conn: &mut Connection) -> Result<()> {
             println!("{}", utils::display::cancelled_activity_msg(&act));
         }
         None => {
-            println!("{}", utils::display::no_current_act_msg())
+            bail!(utils::display::no_current_act_msg())
         }
     }
     Ok(())

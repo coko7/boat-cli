@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{CommandFactory, Parser};
-use log::{LevelFilter, error, info};
+use log::{LevelFilter, info};
 use std::process::ExitCode;
 use yansi::Paint;
 

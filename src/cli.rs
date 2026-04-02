@@ -292,25 +292,12 @@ impl std::fmt::Display for Period {
     }
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Default)]
 #[group(multiple = false)]
 pub struct PrintActivityArgs {
-    /// Output in pretty format
-    #[arg(short = 'p', long = "pretty")]
-    pub use_pretty_format: bool,
-
     /// Output in JSON
     #[arg(short = 'j', long = "json")]
     pub use_json_format: bool,
-}
-
-impl Default for PrintActivityArgs {
-    fn default() -> Self {
-        Self {
-            use_pretty_format: true,
-            use_json_format: false,
-        }
-    }
 }
 
 #[derive(Args, Debug)]
