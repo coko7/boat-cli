@@ -24,7 +24,7 @@ impl PrintableActivityLog {
 
 impl RowPrintable for PrintableActivityLog {
     fn row_spec() -> String {
-        "{:>}  {:<}  {:<}  {:<}  {:<}  {:<}  {:<}".to_string()
+        "    {:>}  {:<}  {:<}  {:<}  {:^}  {:^}  {:<}".to_string()
     }
 
     fn header_names() -> Vec<String> {
@@ -56,7 +56,7 @@ impl RowPrintable for PrintableActivityLog {
                 .ends_at
                 .map(|t| dt_render.render_date_time(t))
                 .unwrap_or("-".to_string()),
-            utils::date::pretty_format_duration(duration),
+            utils::date::pretty_format_duration(duration, false),
         ]
     }
 

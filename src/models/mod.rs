@@ -3,6 +3,7 @@ use yansi::Paint;
 
 pub mod activity;
 pub mod activity_log;
+pub mod boat_data;
 pub mod log;
 pub mod tag;
 

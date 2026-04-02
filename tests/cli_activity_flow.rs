@@ -36,9 +36,9 @@ fn can_create_start_pause_list_activity() {
     // boat pause
     let mut cmd = Command::cargo_bin("boat").unwrap();
     cmd.env("BOAT_CONFIG", &config_path).arg("pause");
-    cmd.assert().success().stdout(
-        predicates::str::contains("stopped").or(predicates::str::contains("stopped activity")),
-    );
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("paused"));
 
     // boat list --json, just check output contains the activity name 'TestTask'
     let mut cmd = Command::cargo_bin("boat").unwrap();

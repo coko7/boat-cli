@@ -28,7 +28,7 @@ impl SimpleActivity {
 impl SimpleActivity {
     pub fn from_db_activity(activity: &DatabaseActivity) -> Self {
         Self {
-            id: activity.id.clone(),
+            id: activity.id,
             name: activity.name.clone(),
             description: activity.description.clone(),
             tags: activity.tags.clone(),
@@ -48,7 +48,7 @@ pub struct PrintableActivity {
 
 impl PrintableActivity {
     pub fn from_activity_and_logs(activity: &SimpleActivity, logs: &[DatabaseLog]) -> Self {
-        let total_duration_sec: i64 = logs.iter().map(|l| Self::count_log_duration_sec(l)).sum();
+        let total_duration_sec: i64 = logs.iter().map(Self::count_log_duration_sec).sum();
 
         Self {
             id: activity.id,
@@ -103,11 +103,11 @@ mod tests {
 
 impl RowPrintable for PrintableActivity {
     fn row_spec() -> String {
-        "{:>}  {:<}  {:<}  {:<}  {:<}  {:^}".to_string()
+        "{:>}  {:<}  {:<}  {:<}  {:<}".to_string()
     }
 
     fn header_names() -> Vec<String> {
-        ["ID", "Name", "Description", "Tags", "Duration", "Ongoing"]
+        ["ID", "Name", "Description", "Tags", "Duration"]
             .iter()
             .map(|s| s.to_string())
             .collect()
@@ -119,8 +119,7 @@ impl RowPrintable for PrintableActivity {
             self.name.clone(),
             self.description.clone().unwrap_or_default(),
             self.tags_str(),
-            utils::date::pretty_format_duration(self.duration),
-            (if self.ongoing { "*" } else { "" }).to_string(),
+            utils::date::pretty_format_duration(self.duration, false),
         ]
     }
 }

@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{CommandFactory, Parser};
 use log::{LevelFilter, error, info};
 use std::process::ExitCode;
+use yansi::Paint;
 
 use crate::{cli::Cli, config::Configuration};
 
@@ -23,7 +24,7 @@ fn main() -> ExitCode {
     match process_args(args) {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
-            error!("{}", e);
+            eprintln!("{}", e.red());
             ExitCode::FAILURE
         }
     }
@@ -49,7 +50,7 @@ fn process_args(args: Cli) -> Result<()> {
         cli::Commands::Delete(args) => commands::activity::delete(&mut conn, args),
         cli::Commands::Get(args) => commands::activity::get_current(&mut conn, args),
         cli::Commands::HelpExtension => print_help(),
-        cli::Commands::Query { command } => commands::query::query_subcommand(&mut conn, command),
+        // cli::Commands::Query { command } => commands::query::query_subcommand(&mut conn, command),
         cli::Commands::Cancel => commands::activity::cancel_current(&mut conn),
         cli::Commands::List(args) => commands::list::list_activities(&mut conn, args),
     }

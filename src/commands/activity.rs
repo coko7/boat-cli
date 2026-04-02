@@ -1,14 +1,16 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use boat_lib::{models::activity::NewActivity, repository::activities_repository as activities};
+use chrono::Local;
 use rusqlite::Connection;
+use yansi::Paint;
 
 use crate::{
     cli,
     models::{
-        TablePrintable,
         activity::{PrintableActivity, SimpleActivity},
         activity_log::PrintableActivityLog,
     },
+    utils,
 };
 
 pub fn create(conn: &mut Connection, args: &cli::CreateActivityArgs) -> Result<()> {
@@ -19,8 +21,18 @@ pub fn create(conn: &mut Connection, args: &cli::CreateActivityArgs) -> Result<(
     };
 
     let created = activities::create(conn, new_activity)?;
+    if !args.use_json_format {
+        println!("{}", utils::display::created_activity_msg(&created)?);
+    }
+
     if args.auto_start {
         activities::start(conn, created.id)?;
+        if !args.use_json_format {
+            println!(
+                "{}",
+                utils::display::started_activity_msg(&created, Local::now())
+            );
+        }
     }
 
     let simp_act = SimpleActivity::from_db_activity(&created);
@@ -28,32 +40,42 @@ pub fn create(conn: &mut Connection, args: &cli::CreateActivityArgs) -> Result<(
     if args.use_json_format {
         let json = serde_json::to_string(&act)?;
         println!("{json}");
-        return Ok(());
     }
 
-    println!("{}", created.id);
     Ok(())
 }
 
 pub fn start(conn: &mut Connection, args: &cli::SelectActivityArgs) -> Result<()> {
     if let Some(current) = activities::get_current_ongoing(conn)? {
-        println!("stopping activity: {current:?}");
+        if current.id == args.activity_id {
+            println!("{}", "activity already ongoing...".italic());
+            return Ok(());
+        }
+
+        pause_current(conn)?;
     }
 
-    let act = activities::get_by_id(conn, args.activity_id)?;
+    let Ok(act) = activities::get_by_id(conn, args.activity_id) else {
+        bail!(utils::display::invaid_activity_id(args.activity_id));
+    };
     activities::start(conn, args.activity_id)?;
-    println!("started activity: {act:?}");
+
+    println!(
+        "{}",
+        utils::display::started_activity_msg(&act, Local::now())
+    );
     Ok(())
 }
 
 pub fn pause_current(conn: &mut Connection) -> Result<()> {
     if let Some(current) = activities::get_current_ongoing(conn)? {
-        let simp_act = SimpleActivity::from_db_activity(&current);
-        let current = PrintableActivity::from_activity_and_logs(&simp_act, &current.logs);
         activities::stop_current(conn)?;
-        println!("stopped activity: {current:?}");
+        println!(
+            "{}",
+            utils::display::paused_activity_msg(&current, Local::now())?
+        );
     } else {
-        println!("no current activity");
+        println!("{}", utils::display::no_current_act_msg());
     }
     Ok(())
 }
@@ -66,15 +88,22 @@ pub fn modify(conn: &mut Connection, args: &cli::ModifyActivityArgs) -> Result<(
         args.update.description.as_deref(),
         args.update.tags.as_deref(),
     )?;
-    let act = activities::get_by_id(conn, args.id)?;
-    println!("modified activity: {act:?}");
+
+    let Ok(act) = activities::get_by_id(conn, args.id) else {
+        bail!(utils::display::invaid_activity_id(args.id));
+    };
+
+    println!("{}", utils::display::modified_activity_msg(&act));
     Ok(())
 }
 
 pub fn delete(conn: &mut Connection, args: &cli::SelectActivityArgs) -> Result<()> {
-    let act = activities::get_by_id(conn, args.activity_id)?;
+    let Ok(act) = activities::get_by_id(conn, args.activity_id) else {
+        bail!(utils::display::invaid_activity_id(args.activity_id));
+    };
+
     activities::delete(conn, args.activity_id)?;
-    println!("deleted activity: {act:?}");
+    println!("{}", utils::display::deleted_activity_msg(&act));
     Ok(())
 }
 
@@ -98,11 +127,9 @@ pub fn get_current(conn: &mut Connection, args: &cli::PrintActivityArgs) -> Resu
                 return Ok(());
             }
 
-            let items = vec![activity_log];
-            let table = items.to_printable_table();
-            println!("{table}");
+            println!("{}", utils::display::current_activity_msg(&current)?);
         }
-        None => println!("no current activity"),
+        None => println!("{}", utils::display::no_current_act_msg()),
     }
     Ok(())
 }
@@ -111,10 +138,10 @@ pub fn cancel_current(conn: &mut Connection) -> Result<()> {
     match activities::get_current_ongoing(conn)? {
         Some(act) => {
             activities::cancel_current(conn)?;
-            println!("cancelled activity: {act:?}");
+            println!("{}", utils::display::cancelled_activity_msg(&act));
         }
         None => {
-            println!("no current activity");
+            println!("{}", utils::display::no_current_act_msg())
         }
     }
     Ok(())

@@ -1,12 +1,15 @@
-use std::str::FromStr;
-
 use boat_lib::repository::Id;
+use chrono::Datelike;
+use chrono::Local;
+use chrono::Months;
 use chrono::NaiveDate;
 use clap::ColorChoice;
 use clap::Parser;
 use clap::{ArgAction, Args, Subcommand, ValueEnum};
+use std::str::FromStr;
 
 use crate::utils;
+use crate::utils::date::DateTimeRenderMode;
 
 #[derive(Parser)]
 #[command(
@@ -72,12 +75,12 @@ pub enum Commands {
     #[command(alias = "l", alias = "ls")]
     List(ListActivityArgs),
 
-    /// Query boat objects
-    #[command(alias = "q")]
-    Query {
-        #[command(subcommand)]
-        command: QuerySubcommand,
-    },
+    // /// Query boat objects
+    // #[command(alias = "q")]
+    // Query {
+    //     #[command(subcommand)]
+    //     command: QuerySubcommand,
+    // },
 
     // This is ONLY way I could find to use the 'h' short alias for help.
     #[command(alias = "h", hide = true)]
@@ -137,6 +140,27 @@ impl DateInput {
         "Provide either a range (YYYY-MM-DD..YYYY-MM-DD) or a single date (YYYY-MM-DD)";
 }
 
+impl std::fmt::Display for DateInput {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DateInput::Single(naive_date) => {
+                let dt = DateTimeRenderMode::DateOnly.render_naive_date(naive_date);
+                write!(f, "{dt}")
+            }
+            DateInput::Range {
+                start,
+                end,
+                inclusive,
+            } => {
+                let start = DateTimeRenderMode::DateOnly.render_naive_date(start);
+                let end = DateTimeRenderMode::DateOnly.render_naive_date(end);
+                let inclusion_msg = (if *inclusive { "included" } else { "excluded" }).to_string();
+                write!(f, "{start} to {end} ({inclusion_msg})")
+            }
+        }
+    }
+}
+
 impl FromStr for DateInput {
     type Err = String;
 
@@ -170,8 +194,14 @@ impl FromStr for DateInput {
 #[derive(Args, Debug)]
 pub struct ListActivityArgs {
     /// Restrict to entries starting in the given <PERIOD>
-    #[arg(short = 'p', long = "period", value_name = "PERIOD", default_value_t = Period::ThisWeek, value_enum, conflicts_with = "date_range")]
-    pub period: Period,
+    #[arg(
+        short = 'p',
+        long = "period",
+        value_name = "PERIOD",
+        value_enum,
+        conflicts_with = "date_range"
+    )]
+    pub period: Option<Period>,
 
     /// Restrict to entries matching <DATE_RANGE> (YYYY-MM-DD format)
     #[arg(
@@ -186,8 +216,12 @@ pub struct ListActivityArgs {
     #[arg(short = 's', long = "summary", conflicts_with = "no_grouping")]
     pub show_summary: bool,
 
+    /// Show all activities, even the ones with no log
+    #[arg(short = 'a', long = "all", conflicts_with = "no_grouping")]
+    pub show_all: bool,
+
     /// Do not group activity logs by date
-    #[arg(short = 'n', long = "no-grouping", conflicts_with = "show_summary")]
+    #[arg(short = 'n', long = "no-grouping", conflicts_with_all = ["show_summary", "show_all"])]
     pub no_grouping: bool,
 
     /// Output in JSON
@@ -205,14 +239,18 @@ pub struct ListArgs {
     pub use_json_format: bool,
 }
 
-#[derive(ValueEnum, Clone, Debug)]
+#[derive(ValueEnum, Clone, Copy, Debug, Default)]
 pub enum Period {
     #[value(name = "today", alias = "td", alias = "tod")]
     Today,
+
     #[value(name = "yesterday", alias = "yd", alias = "ytd")]
     Yesterday,
+
     #[value(name = "this-week", alias = "tw", alias = "twk", alias = "wk")]
+    #[default]
     ThisWeek,
+
     #[value(
         name = "last-week",
         alias = "lw",
@@ -222,8 +260,10 @@ pub enum Period {
         alias = "ywk"
     )]
     LastWeek,
+
     #[value(name = "this-month", alias = "tm", alias = "tmo", alias = "mo")]
     ThisMonth,
+
     #[value(
         name = "last-month",
         alias = "lm",
@@ -233,6 +273,23 @@ pub enum Period {
         alias = "ymo"
     )]
     LastMonth,
+}
+
+impl std::fmt::Display for Period {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let now = Local::now();
+        let last_month = now - Months::new(1);
+
+        let period = match self {
+            Period::Today => "Today".to_string(),
+            Period::Yesterday => "Yesterday".to_string(),
+            Period::ThisWeek => "This week".to_string(),
+            Period::LastWeek => "Last week".to_string(),
+            Period::ThisMonth => format!("{} {}", now.format("%B"), now.year()),
+            Period::LastMonth => format!("{} {}", last_month.format("%B"), last_month.year()),
+        };
+        write!(f, "{period}")
+    }
 }
 
 #[derive(Args, Debug)]
@@ -260,10 +317,6 @@ impl Default for PrintActivityArgs {
 pub struct SelectActivityArgs {
     /// ID of the activity
     pub activity_id: Id,
-
-    /// Output in JSON
-    #[arg(short = 'j', long = "json")]
-    pub use_json_format: bool,
 }
 
 #[derive(Args, Debug)]
