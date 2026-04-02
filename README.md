@@ -85,12 +85,12 @@ You can override the default configuration file path by setting the `BOAT_CONFIG
 If you have ever used [`bartib`](https://github.com/nikolassv/bartib), then `boat` is going to feel very familiar.
 Try `boat help` for a quick list of commands:
 ```help
-boat 0.5.0
+boat 0.6.0
 
 Basic Opinionated Activity Tracker
 
 Usage:
-boat <COMMAND>
+boat [OPTIONS] <COMMAND>
 
 Commands:
   new     Create a new activity
@@ -101,14 +101,13 @@ Commands:
   delete  Delete an activity
   get     Get the current activity
   list    List activities
-  query   Query boat objects
   help    Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help     Print help
-  -V, --version  Print version
-
-Made by @coko7 <contact@coko7.fr>
+  -v, --verbose...  Increase logging verbosity
+  -q, --quiet...    Decrease logging verbosity
+  -h, --help        Print help
+  -V, --version     Print version
 ```
 
 > [!TIP]
@@ -121,7 +120,6 @@ Made by @coko7 <contact@coko7.fr>
 > - delete: `d`, `del`, `delete`, `rm`, `rem`, `remove`
 > - get: `g`, `get`
 > - list: `l`, `ls`, `list`
-> - query: `q`, `query`
 > - help: `h`, `help`, `-h`, `--help`
 >
 > Prefer using the full length command names in scripts as they are more explicit and unlikely to be changed (unlike shorter aliases).
