@@ -2,6 +2,11 @@
 
 `boat` - A **B**asic **O**pinionated **A**ctivity **T**racker, inspired by [bartib](https://github.com/nikolassv/bartib).
 
+![demo](https://github.com/user-attachments/assets/007809ee-fda9-4848-bc1c-ccd0131a3616)
+
+> [!TIP]
+> The `mp4` version of the demo is available [here](https://github.com/user-attachments/assets/919cb800-1d65-4c3f-bbae-a3195db3b3f6)
+
 Like its name implies, `boat` allows you to track the time you spend on everyday tasks.
 
 It has mainly been designed to be easy to embed in custom bash scripts so that you can augment it with fuzzy-finding.
