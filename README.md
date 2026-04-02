@@ -2,10 +2,7 @@
 
 `boat` - A **B**asic **O**pinionated **A**ctivity **T**racker, inspired by [bartib](https://github.com/nikolassv/bartib).
 
-![demo](https://github.com/user-attachments/assets/007809ee-fda9-4848-bc1c-ccd0131a3616)
-
-> [!TIP]
-> The `mp4` version of the demo is available [here](https://github.com/user-attachments/assets/919cb800-1d65-4c3f-bbae-a3195db3b3f6)
+<img width="1280" height="640" alt="boat-cli" src="https://github.com/user-attachments/assets/0cb3114c-7128-470b-8f6c-516056cedafa" />
 
 Like its name implies, `boat` allows you to track the time you spend on everyday tasks.
 
@@ -22,19 +19,21 @@ It relies on [`boat-lib`](https://github.com/coko7/boat-lib) for core functions.
 ![Rust](https://img.shields.io/github/languages/top/coko7/boat-cli?color=orange)
 [![Tests](https://github.com/coko7/boat-cli/actions/workflows/rust.yml/badge.svg)](https://github.com/coko7/boat-cli/actions/workflows/rust.yml)
 
-> [!WARNING]  
-> 🚧 Work in Progress
->
-> This cli is actively being developed. Since it's in its early stages, things will likely break often.
-> Don't use it for now.
-
 ## Contents
 
-- [🤔 Why was this tool created?](#🤔-why-was-this-tool-created)
-- [🛠️ Installation](#🛠️-installation)
+- [🚀 Demo](#-demo)
+- [🤔 Why was this tool created?](#-why-was-this-tool-created)
+- [🛠️ Installation](#%EF%B8%8F-installation)
     - [Install with a bundled version of SQLite](#install-with-a-bundled-version-of-sqlite)
-- [⚙️ Configuration](#⚙️-configuration)
-- [✨ Usage](#✨-usage)
+- [⚙️ Configuration](#%EF%B8%8F-configuration)
+- [✨ Usage](#-usage)
+
+## 🚀 Demo
+
+![demo](https://github.com/user-attachments/assets/007809ee-fda9-4848-bc1c-ccd0131a3616)
+
+> [!TIP]
+> The `mp4` version of the demo is available [here](https://github.com/user-attachments/assets/919cb800-1d65-4c3f-bbae-a3195db3b3f6)
 
 ## 🤔 Why was this tool created?
 
