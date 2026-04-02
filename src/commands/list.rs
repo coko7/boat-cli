@@ -1,57 +1,67 @@
 use anyhow::Result;
 use boat_lib::repository::activities_repository as activities;
-use chrono::Local;
+use chrono::{Local, NaiveDate};
 use rusqlite::Connection;
-use std::{cmp::Reverse, collections::BTreeMap};
+use std::collections::BTreeMap;
+use yansi::Paint;
 
 use crate::{
-    cli::{self, Period},
-    models::{activity::PrintableActivity, activity_log::PrintableActivityLog},
+    cli::{self},
+    models::{activity_log::PrintableActivityLog, boat_data::BoatData},
     utils::{self, date::DateTimeRenderMode},
 };
 
 pub fn list_activities(conn: &mut Connection, args: &cli::ListActivityArgs) -> Result<()> {
-    if args.activities_only {
-        return list_activities_only(conn, args.use_json_format);
+    let db_acts: Vec<_> = activities::get_all(conn)?;
+    let boat_data = BoatData::create_filtered_data(db_acts, args);
+
+    if args.show_summary {
+        if !args.use_json_format {
+            let date_msg = match args.date_range {
+                Some(dt_range) => Some(dt_range.to_string()),
+                None => args.period.map(|p| p.to_string()),
+            };
+
+            if let Some(date_msg) = date_msg {
+                println!("{} {}\n", "Summary:".underline(), date_msg.green());
+            }
+        }
+
+        return list_activity_summaries(&boat_data, args.show_all, args.use_json_format);
     }
 
-    list_activity_logs(conn, args)
+    list_activity_logs(&boat_data, args)
 }
 
-fn list_activities_only(conn: &mut Connection, use_json: bool) -> Result<()> {
-    let mut all_acts: Vec<_> = activities::get_all(conn)?
-        .iter()
-        .map(PrintableActivity::from_activity)
+fn list_activity_summaries(boat_data: &BoatData, show_all: bool, use_json: bool) -> Result<()> {
+    let prt_acts = boat_data
+        .get_printable_activities()
+        .into_iter()
+        .filter(|act| show_all || act.duration > 0)
         .collect();
-    all_acts.sort_by_key(|a| Reverse(a.id));
 
-    utils::common::list_printable_items(all_acts, use_json)
-}
+    utils::common::list_printable_items(&prt_acts, use_json)?;
 
-fn matches_period(al: &PrintableActivityLog, period: &Period) -> bool {
-    match period {
-        cli::Period::Today => utils::date::is_today(al.log.starts_at),
-        cli::Period::Yesterday => utils::date::is_yesterday(al.log.starts_at),
-        cli::Period::ThisWeek => utils::date::is_this_week(al.log.starts_at),
-        cli::Period::LastWeek => utils::date::is_last_week(al.log.starts_at),
-        cli::Period::ThisMonth => utils::date::is_this_month(al.log.starts_at),
-        cli::Period::LastMonth => utils::date::is_last_month(al.log.starts_at),
+    if !use_json && !prt_acts.is_empty() {
+        let total_sec: i64 = prt_acts.iter().map(|pa| pa.duration).sum();
+        println!(
+            "{} {}",
+            "Total:".underline(),
+            utils::date::pretty_format_duration(total_sec, false).green()
+        );
     }
+
+    Ok(())
 }
 
-fn list_activity_logs(conn: &mut Connection, args: &cli::ListActivityArgs) -> Result<()> {
-    let mut act_logs: Vec<_> = activities::get_all(conn)?
-        .iter()
-        .flat_map(PrintableActivityLog::from_activity)
-        .filter(|al| matches_period(al, &args.period))
-        .collect();
-    act_logs.sort_by_key(|al| al.log.starts_at);
+fn list_activity_logs(boat_data: &BoatData, args: &cli::ListActivityArgs) -> Result<()> {
+    let prt_logs = boat_data.get_printable_logs();
 
     if args.no_grouping {
-        return utils::common::list_printable_items(act_logs.to_vec(), args.use_json_format);
+        return utils::common::list_printable_items(&prt_logs, args.use_json_format);
     }
 
-    let act_logs_by_date = group_by_date(&act_logs);
+    let act_logs_by_date = group_by_date(&prt_logs);
 
     if args.use_json_format {
         let json = serde_json::to_string(&act_logs_by_date)?;
@@ -59,9 +69,17 @@ fn list_activity_logs(conn: &mut Connection, args: &cli::ListActivityArgs) -> Re
         return Ok(());
     }
 
+    if act_logs_by_date.is_empty() {
+        println!("no available data");
+        return Ok(());
+    }
+
     for (date, act_logs) in act_logs_by_date.iter() {
-        println!("{date}");
-        utils::common::list_printable_items(act_logs.to_vec(), false)?;
+        let dt = NaiveDate::parse_from_str(date, "%Y-%m-%d")?;
+        let diff_msg = utils::common::get_date_info_msg(Local::now().date_naive(), dt);
+        let ribbon = utils::display::format_ascii_ribbon(date, Some(&diff_msg));
+        println!("{ribbon}");
+        utils::common::list_printable_items(act_logs, false)?;
     }
     Ok(())
 }

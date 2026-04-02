@@ -1,6 +1,6 @@
 //! Basic smoke tests: help, version, invalid command
 use assert_cmd::Command;
-use predicates::prelude::PredicateBooleanExt;
+use predicates::prelude::*;
 
 #[test]
 fn test_help_arg() {

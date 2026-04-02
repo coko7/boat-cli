@@ -17,5 +17,5 @@ fn list_tags(conn: &mut Connection, args: &cli::ListArgs) -> Result<()> {
         .collect();
     all_tags.sort_by_key(|t| Reverse(t.id));
 
-    utils::common::list_printable_items(all_tags, args.use_json_format)
+    utils::common::list_printable_items(&all_tags, args.use_json_format)
 }

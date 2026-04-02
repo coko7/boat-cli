@@ -1,6 +1,6 @@
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate};
 
-pub fn pretty_format_duration(mut seconds: i64) -> String {
+pub fn pretty_format_duration(mut seconds: i64, long_format: bool) -> String {
     let hours = seconds / 3600;
     seconds %= 3600;
 
@@ -10,15 +10,18 @@ pub fn pretty_format_duration(mut seconds: i64) -> String {
     let mut parts = Vec::new();
 
     if hours > 0 {
-        parts.push(format!("{hours}h"));
+        let suffix = if long_format { " hours" } else { "h" }.to_string();
+        parts.push(format!("{hours}{suffix}"));
     }
 
     if minutes > 0 {
-        parts.push(format!("{minutes}m"));
+        let suffix = if long_format { " minutes" } else { "m" }.to_string();
+        parts.push(format!("{minutes}{suffix}"));
     }
 
     if hours == 0 && minutes == 0 {
-        parts.push(format!("{seconds}s"));
+        let suffix = if long_format { " seconds" } else { "s" }.to_string();
+        parts.push(format!("{seconds}{suffix}"));
     }
 
     parts.join(" ")
@@ -30,13 +33,13 @@ mod tests {
 
     #[test]
     fn test_pretty_format_duration() {
-        assert_eq!(&pretty_format_duration(0), "0s");
-        assert_eq!(&pretty_format_duration(42), "42s");
-        assert_eq!(&pretty_format_duration(60), "1m");
-        assert_eq!(&pretty_format_duration(61), "1m");
-        assert_eq!(&pretty_format_duration(3600), "1h");
-        assert_eq!(&pretty_format_duration(3601), "1h");
-        assert_eq!(&pretty_format_duration(3661), "1h 1m");
+        assert_eq!(&pretty_format_duration(0, false), "0s");
+        assert_eq!(&pretty_format_duration(42, false), "42s");
+        assert_eq!(&pretty_format_duration(60, false), "1m");
+        assert_eq!(&pretty_format_duration(61, false), "1m");
+        assert_eq!(&pretty_format_duration(3600, false), "1h");
+        assert_eq!(&pretty_format_duration(3601, false), "1h");
+        assert_eq!(&pretty_format_duration(3661, false), "1h 1m");
     }
 }
 
@@ -47,6 +50,15 @@ pub enum DateTimeRenderMode {
 }
 
 impl DateTimeRenderMode {
+    pub fn render_naive_date(&self, dt: &chrono::NaiveDate) -> String {
+        let fmt = match self {
+            DateTimeRenderMode::TimeOnly => "%H:%M",
+            DateTimeRenderMode::DateOnly => "%Y-%m-%d",
+            DateTimeRenderMode::DateAndTime => "%Y-%m-%d %H:%M",
+        };
+
+        dt.format(fmt).to_string()
+    }
     pub fn render_date_time<Tz>(&self, dt: chrono::DateTime<Tz>) -> String
     where
         Tz: chrono::TimeZone,
