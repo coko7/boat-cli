@@ -2,7 +2,7 @@
 
 `boat` - A **B**asic **O**pinionated **A**ctivity **T**racker, inspired by [bartib](https://github.com/nikolassv/bartib).
 
-<img width="1280" height="640" alt="boat-cli" src="./docs/boat-cli.png" />
+![](./docs/boat-cli.png)
 
 Like its name implies, `boat` allows you to track the time you spend on everyday tasks.
 
