@@ -1,6 +1,7 @@
 use anyhow::Result;
 use boat_lib::repository::activities_repository as activities;
 use chrono::{Local, NaiveDate};
+use log::info;
 use rusqlite::Connection;
 use std::collections::BTreeMap;
 use yansi::Paint;
@@ -12,17 +13,21 @@ use crate::{
 };
 
 pub fn list_activities(conn: &mut Connection, args: &cli::ListActivityArgs) -> Result<()> {
+    info!("getting all activities");
     let db_acts: Vec<_> = activities::get_all(conn)?;
     let boat_data = BoatData::create_filtered_data(db_acts, args);
 
     if args.show_summary {
+        info!("showing summary");
         if !args.use_json_format {
+            info!("using JSON format for summary");
             let date_msg = match args.date_range {
                 Some(dt_range) => Some(dt_range.to_string()),
                 None => args.period.map(|p| p.to_string()),
             };
 
             if let Some(date_msg) = date_msg {
+                info!("using custom date msg for summary");
                 println!("{} {}\n", "Summary:".underline(), date_msg.green());
             }
         }
@@ -34,6 +39,7 @@ pub fn list_activities(conn: &mut Connection, args: &cli::ListActivityArgs) -> R
 }
 
 fn list_activity_summaries(boat_data: &BoatData, show_all: bool, use_json: bool) -> Result<()> {
+    info!("listing activity summaries (show_all: {show_all})");
     let prt_acts = boat_data
         .get_printable_activities()
         .into_iter()
@@ -55,9 +61,11 @@ fn list_activity_summaries(boat_data: &BoatData, show_all: bool, use_json: bool)
 }
 
 fn list_activity_logs(boat_data: &BoatData, args: &cli::ListActivityArgs) -> Result<()> {
+    info!("listing individual activity logs");
     let prt_logs = boat_data.get_printable_logs();
 
     if args.no_grouping {
+        info!("activity logs will not be grouped by date");
         return utils::common::list_printable_items(&prt_logs, args.use_json_format);
     }
 
@@ -74,13 +82,16 @@ fn list_activity_logs(boat_data: &BoatData, args: &cli::ListActivityArgs) -> Res
         return Ok(());
     }
 
+    info!("displaying activity logs grouped by date");
     for (date, act_logs) in act_logs_by_date.iter() {
         let dt = NaiveDate::parse_from_str(date, "%Y-%m-%d")?;
         let diff_msg = utils::common::get_date_info_msg(Local::now().date_naive(), dt);
         let ribbon = utils::display::format_ascii_ribbon(date, Some(&diff_msg));
+
         println!("{ribbon}");
         utils::common::list_printable_items(act_logs, false)?;
     }
+
     Ok(())
 }
 

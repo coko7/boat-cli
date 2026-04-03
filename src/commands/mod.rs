@@ -1,3 +1,18 @@
-pub mod activity;
+pub mod cancel;
+pub mod create;
+pub mod delete;
+pub mod get;
 pub mod list;
+pub mod modify;
+pub mod pause;
 pub mod query;
+pub mod start;
+
+pub use self::cancel::cancel_current;
+pub use self::create::create;
+pub use self::delete::delete;
+pub use self::get::get_current;
+pub use self::list::list_activities;
+pub use self::modify::modify;
+pub use self::pause::pause_current;
+pub use self::start::start;

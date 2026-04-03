@@ -20,7 +20,7 @@ fn main() -> ExitCode {
         .filter_level(args.verbose.log_level_filter())
         .init();
 
-    info!("process cli args");
+    info!("process cli args: {args:?}");
     match process_args(args) {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
@@ -40,19 +40,20 @@ fn process_args(args: Cli) -> Result<()> {
 
     info!("loading config");
     let config = Configuration::load_from_fs()?;
+    info!("init db connection");
     let mut conn = boat_lib::utils::init_database(config.database_path)?;
 
     match &args.command {
-        cli::Commands::New(args) => commands::activity::create(&mut conn, args),
-        cli::Commands::Start(args) => commands::activity::start(&mut conn, args),
-        cli::Commands::Pause => commands::activity::pause_current(&mut conn),
-        cli::Commands::Modify(args) => commands::activity::modify(&mut conn, args),
-        cli::Commands::Delete(args) => commands::activity::delete(&mut conn, args),
-        cli::Commands::Get(args) => commands::activity::get_current(&mut conn, args),
+        cli::Commands::New(args) => commands::create(&mut conn, args),
+        cli::Commands::Start(args) => commands::start(&mut conn, args),
+        cli::Commands::Pause => commands::pause_current(&mut conn),
+        cli::Commands::Modify(args) => commands::modify(&mut conn, args),
+        cli::Commands::Delete(args) => commands::delete(&mut conn, args),
+        cli::Commands::Get(args) => commands::get_current(&mut conn, args),
         cli::Commands::HelpExtension => print_help(),
         // cli::Commands::Query { command } => commands::query::query_subcommand(&mut conn, command),
-        cli::Commands::Cancel => commands::activity::cancel_current(&mut conn),
-        cli::Commands::List(args) => commands::list::list_activities(&mut conn, args),
+        cli::Commands::Cancel => commands::cancel_current(&mut conn),
+        cli::Commands::List(args) => commands::list_activities(&mut conn, args),
     }
 }
 

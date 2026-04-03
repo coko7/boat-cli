@@ -19,13 +19,13 @@ pub fn format_ascii_ribbon(text: &str, tooltip_text: Option<&str>) -> String {
     )
 }
 
-pub fn created_activity_msg(activity: &DatabaseActivity) -> Result<String> {
-    Ok(format!(
+pub fn created_activity_msg(activity: &DatabaseActivity) -> String {
+    format!(
         "{} new #{} \"{}\"",
         "created".cyan(),
         activity.id,
         activity.name
-    ))
+    )
 }
 
 pub fn paused_activity_msg(

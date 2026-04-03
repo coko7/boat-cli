@@ -2,6 +2,7 @@ use boat_lib::{
     models::{activity::Activity as DatabaseActivity, log::Log as DatabaseLog},
     repository::Id,
 };
+use log::info;
 use std::{cmp::Reverse, collections::HashMap};
 
 use crate::{
@@ -23,11 +24,13 @@ impl BoatData {
         db_activities: Vec<DatabaseActivity>,
         args: &cli::ListActivityArgs,
     ) -> Self {
+        info!("creating filtered boat data");
         let activities = db_activities
             .iter()
             .map(|db_act| (db_act.id, SimpleActivity::from_db_activity(db_act)))
             .collect();
 
+        info!("filtering activity logs based on date filters (period / dates)");
         let logs = db_activities
             .into_iter()
             .map(|db_act| {
@@ -44,6 +47,7 @@ impl BoatData {
     }
 
     pub fn get_printable_activities(&self) -> Vec<PrintableActivity> {
+        info!("retrieving printable activities");
         let mut prt_acts: Vec<_> = self
             .activities
             .values()
@@ -53,11 +57,13 @@ impl BoatData {
             })
             .collect();
 
+        info!("sorting printable activities by duration DESC");
         prt_acts.sort_by_key(|act| Reverse(act.duration));
         prt_acts
     }
 
     pub fn get_printable_logs(&self) -> Vec<PrintableActivityLog> {
+        info!("retrieving printable logs");
         let mut prt_logs: Vec<_> = self
             .logs
             .values()
@@ -68,6 +74,7 @@ impl BoatData {
             })
             .collect();
 
+        info!("sorting printable logs by start dt ASC");
         prt_logs.sort_by_key(|al| al.log.starts_at);
         prt_logs
     }

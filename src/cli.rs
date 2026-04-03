@@ -11,7 +11,7 @@ use std::str::FromStr;
 use crate::utils;
 use crate::utils::date::DateTimeRenderMode;
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(
     name = "boat",
     version,
@@ -28,7 +28,7 @@ pub struct Cli {
     pub verbose: clap_verbosity_flag::Verbosity,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 #[command(rename_all = "kebab-case")]
 pub enum Commands {
     /// Create a new activity

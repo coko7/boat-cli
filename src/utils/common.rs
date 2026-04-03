@@ -1,6 +1,7 @@
 use anyhow::Result;
 use boat_lib::models::log::Log as DatabaseLog;
 use chrono::{Local, NaiveDate};
+use log::debug;
 use serde::Serialize;
 
 use crate::{
@@ -35,11 +36,14 @@ pub fn matches_date_filter(log: &DatabaseLog, args: &cli::ListActivityArgs) -> b
     } else if let Some(period) = args.period {
         matches_period(log, &period)
     } else {
+        debug!("no period / date filter provided, retaining activity log");
         true
     }
 }
 
 pub fn matches_period(log: &DatabaseLog, period: &Period) -> bool {
+    debug!("checking if {log:?} matches the given period: {period:?}");
+
     match period {
         Period::Today => utils::date::is_today(log.starts_at),
         Period::Yesterday => utils::date::is_yesterday(log.starts_at),
@@ -51,6 +55,8 @@ pub fn matches_period(log: &DatabaseLog, period: &Period) -> bool {
 }
 
 pub fn matches_date_range(log: &DatabaseLog, date_range: &DateInput) -> bool {
+    debug!("checking if {log:?} matches the given date_range: {date_range:?}");
+
     let log_start = log.starts_at.date_naive();
     let log_end = log.ends_at.unwrap_or(Local::now().into()).date_naive();
 
