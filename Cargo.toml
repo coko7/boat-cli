@@ -1,6 +1,6 @@
 [package]
 name = "boat-cli"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2024"
 description = "Basic Opinionated Activity Tracker, a command line interface inspired by bartib"
 repository = "https://github.com/coko7/boat"
