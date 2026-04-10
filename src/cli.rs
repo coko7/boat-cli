@@ -57,6 +57,10 @@ pub enum Commands {
     #[command(alias = "m", alias = "mod")]
     Modify(ModifyActivityArgs),
 
+    /// Edit activity logs as text in an external editor
+    #[command(alias = "e", alias = "ed")]
+    Edit(EditLogsArgs),
+
     /// Delete an activity
     #[command(
         alias = "d",
@@ -85,10 +89,6 @@ pub enum Commands {
     // This is ONLY way I could find to use the 'h' short alias for help.
     #[command(alias = "h", hide = true)]
     HelpExtension,
-    // Edit the raw content of activity files
-    // #[command(alias = "e", alias = "ed")]
-    // Edit(EditFilesArgs),
-
     // Verify the activity data and report eventual issues
     // #[command(alias = "v", alias = "verif")]
     // Verify {},
@@ -354,11 +354,27 @@ pub struct UpdateGroup {
 }
 
 #[derive(Args, Debug)]
-#[group(required = true, multiple = false)]
-pub struct EditFilesArgs {
-    #[arg(short = 'd', long = "definitions", alias = "def")]
-    pub edit_definitions: bool,
+pub struct EditLogsArgs {
+    /// Restrict to entries starting in the given <PERIOD>
+    #[arg(
+        short = 'p',
+        long = "period",
+        value_name = "PERIOD",
+        value_enum,
+        conflicts_with = "date_range"
+    )]
+    pub period: Option<Period>,
 
-    #[arg(short = 'l', long = "logs")]
-    pub edit_logs: bool,
+    /// Restrict to entries matching <DATE_RANGE> (YYYY-MM-DD format)
+    #[arg(
+        short = 'd',
+        long = "date",
+        value_name = "DATE_RANGE",
+        conflicts_with = "period"
+    )]
+    pub date_range: Option<DateInput>,
+
+    /// Do not include instruction comments in the editable file
+    #[arg(short = 'n', long = "no-instructions")]
+    pub hide_instructions: bool,
 }

@@ -19,6 +19,20 @@ impl PrintableTag {
     }
 }
 
+impl RowPrintable for PrintableTag {
+    fn row_spec() -> String {
+        "{:>}  {:<}".to_string()
+    }
+
+    fn header_names() -> Vec<String> {
+        ["ID", "Name"].iter().map(|s| s.to_string()).collect()
+    }
+
+    fn row_values(&self) -> Vec<String> {
+        vec![self.id.to_string(), self.name.clone()]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -31,19 +45,5 @@ mod tests {
         let tag = PrintableTag::from_tag(&db_tag);
         assert_eq!(tag.id, 1);
         assert_eq!(tag.name, "foo");
-    }
-}
-
-impl RowPrintable for PrintableTag {
-    fn row_spec() -> String {
-        "{:>}  {:<}".to_string()
-    }
-
-    fn header_names() -> Vec<String> {
-        ["ID", "Name"].iter().map(|s| s.to_string()).collect()
-    }
-
-    fn row_values(&self) -> Vec<String> {
-        vec![self.id.to_string(), self.name.clone()]
     }
 }

@@ -46,14 +46,15 @@ fn process_args(args: Cli) -> Result<()> {
     match &args.command {
         cli::Commands::New(args) => commands::create(&mut conn, args),
         cli::Commands::Start(args) => commands::start(&mut conn, args),
+        cli::Commands::Cancel => commands::cancel_current(&mut conn),
         cli::Commands::Pause => commands::pause_current(&mut conn),
         cli::Commands::Modify(args) => commands::modify(&mut conn, args),
+        cli::Commands::Edit(args) => commands::edit(&mut conn, args),
         cli::Commands::Delete(args) => commands::delete(&mut conn, args),
         cli::Commands::Get(args) => commands::get_current(&mut conn, args),
-        cli::Commands::HelpExtension => print_help(),
         // cli::Commands::Query { command } => commands::query::query_subcommand(&mut conn, command),
-        cli::Commands::Cancel => commands::cancel_current(&mut conn),
         cli::Commands::List(args) => commands::list_activities(&mut conn, args),
+        cli::Commands::HelpExtension => print_help(),
     }
 }
 

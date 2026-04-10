@@ -1,6 +1,7 @@
 pub mod cancel;
 pub mod create;
 pub mod delete;
+pub mod edit;
 pub mod get;
 pub mod list;
 pub mod modify;
@@ -11,6 +12,7 @@ pub mod start;
 pub use self::cancel::cancel_current;
 pub use self::create::create;
 pub use self::delete::delete;
+pub use self::edit::edit;
 pub use self::get::get_current;
 pub use self::list::list_activities;
 pub use self::modify::modify;

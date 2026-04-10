@@ -3,9 +3,10 @@ use boat_lib::models::log::Log as DatabaseLog;
 use chrono::{Local, NaiveDate};
 use log::debug;
 use serde::Serialize;
+use std::collections::HashSet;
 
 use crate::{
-    cli::{self, DateInput, Period},
+    cli::{DateInput, Period},
     models::{RowPrintable, TablePrintable},
     utils,
 };
@@ -30,10 +31,20 @@ pub fn list_printable_items<T: RowPrintable + Serialize>(
     Ok(())
 }
 
-pub fn matches_date_filter(log: &DatabaseLog, args: &cli::ListActivityArgs) -> bool {
-    if let Some(date_range) = args.date_range {
+pub fn tags_str(tags: &HashSet<String>) -> String {
+    let mut tags: Vec<_> = tags.iter().map(String::as_str).collect();
+    tags.sort_unstable();
+    tags.join(",")
+}
+
+pub fn matches_date_filter(
+    log: &DatabaseLog,
+    date_input_opt: Option<DateInput>,
+    period_opt: Option<Period>,
+) -> bool {
+    if let Some(date_range) = date_input_opt {
         matches_date_range(log, &date_range)
-    } else if let Some(period) = args.period {
+    } else if let Some(period) = period_opt {
         matches_period(log, &period)
     } else {
         debug!("no period / date filter provided, retaining activity log");

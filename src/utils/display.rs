@@ -95,13 +95,8 @@ pub fn current_activity_msg(activity: &DatabaseActivity) -> Result<String> {
     let duration_secs = (Local::now() - started_at).num_seconds();
 
     let tags_str = if !activity.tags.is_empty() {
-        let str = activity
-            .tags
-            .iter()
-            .map(String::as_str)
-            .collect::<Vec<_>>()
-            .join(", ");
-        format!(" [{str}]")
+        let tags_str = utils::common::tags_str(&activity.tags);
+        format!(" [{tags_str}]")
     } else {
         "".to_string()
     };

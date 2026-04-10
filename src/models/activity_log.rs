@@ -50,7 +50,7 @@ impl RowPrintable for PrintableActivityLog {
             self.activity.id.to_string(),
             self.activity.name.clone(),
             self.activity.description.clone().unwrap_or_default(),
-            self.activity.tags_str(),
+            utils::common::tags_str(&self.activity.tags),
             dt_render.render_date_time(self.log.starts_at),
             self.log
                 .ends_at

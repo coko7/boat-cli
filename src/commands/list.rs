@@ -15,7 +15,7 @@ use crate::{
 pub fn list_activities(conn: &mut Connection, args: &cli::ListActivityArgs) -> Result<()> {
     info!("getting all activities");
     let db_acts: Vec<_> = activities::get_all(conn)?;
-    let boat_data = BoatData::create_filtered_data(db_acts, args);
+    let boat_data = BoatData::create_filtered_data(db_acts, args.date_range, args.period);
 
     if args.show_summary {
         info!("showing summary");

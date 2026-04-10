@@ -16,16 +16,6 @@ pub struct SimpleActivity {
 }
 
 impl SimpleActivity {
-    pub fn tags_str(&self) -> String {
-        self.tags
-            .iter()
-            .map(String::as_str)
-            .collect::<Vec<_>>()
-            .join(",")
-    }
-}
-
-impl SimpleActivity {
     pub fn from_db_activity(activity: &DatabaseActivity) -> Self {
         Self {
             id: activity.id,
@@ -65,13 +55,28 @@ impl PrintableActivity {
         let end = log.ends_at.unwrap_or(Utc::now());
         (end - start).num_seconds()
     }
+}
 
-    pub fn tags_str(&self) -> String {
-        self.tags
+impl RowPrintable for PrintableActivity {
+    fn row_spec() -> String {
+        "{:>}  {:<}  {:<}  {:<}  {:<}".to_string()
+    }
+
+    fn header_names() -> Vec<String> {
+        ["ID", "Name", "Description", "Tags", "Duration"]
             .iter()
-            .map(String::as_str)
-            .collect::<Vec<_>>()
-            .join(",")
+            .map(|s| s.to_string())
+            .collect()
+    }
+
+    fn row_values(&self) -> Vec<String> {
+        vec![
+            self.id.to_string(),
+            self.name.clone(),
+            self.description.clone().unwrap_or_default(),
+            utils::common::tags_str(&self.tags),
+            utils::date::pretty_format_duration(self.duration, false),
+        ]
     }
 }
 
@@ -93,33 +98,10 @@ mod tests {
             ongoing: false,
             tags,
         };
-        let tags_str = act.tags_str();
+        let tags_str = utils::common::tags_str(&act.tags);
 
         assert!(tags_str.contains("foo"));
         assert!(tags_str.contains("bar"));
         assert!(tags_str.find(',').is_some());
-    }
-}
-
-impl RowPrintable for PrintableActivity {
-    fn row_spec() -> String {
-        "{:>}  {:<}  {:<}  {:<}  {:<}".to_string()
-    }
-
-    fn header_names() -> Vec<String> {
-        ["ID", "Name", "Description", "Tags", "Duration"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect()
-    }
-
-    fn row_values(&self) -> Vec<String> {
-        vec![
-            self.id.to_string(),
-            self.name.clone(),
-            self.description.clone().unwrap_or_default(),
-            self.tags_str(),
-            utils::date::pretty_format_duration(self.duration, false),
-        ]
     }
 }
