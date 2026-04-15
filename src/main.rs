@@ -51,9 +51,9 @@ fn process_args(args: Cli) -> Result<()> {
         cli::Commands::Modify(args) => commands::modify(&mut conn, args),
         cli::Commands::Edit(args) => commands::edit(&mut conn, args),
         cli::Commands::Delete(args) => commands::delete(&mut conn, args),
-        cli::Commands::Get(args) => commands::get_current(&mut conn, args),
-        // cli::Commands::Query { command } => commands::query::query_subcommand(&mut conn, command),
-        cli::Commands::List(args) => commands::list_activities(&mut conn, args),
+        cli::Commands::Get(args) => commands::get_current(&conn, args),
+        cli::Commands::List(args) => commands::list_activity_logs(&conn, args),
+        cli::Commands::Report(list_activity_args) => todo!(),
         cli::Commands::HelpExtension => print_help(),
     }
 }

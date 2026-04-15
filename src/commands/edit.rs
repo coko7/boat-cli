@@ -14,12 +14,11 @@ use yansi::Paint;
 use crate::{cli::EditLogsArgs, models::boat_data::BoatData};
 
 pub fn edit(conn: &mut rusqlite::Connection, args: &EditLogsArgs) -> Result<()> {
-    let date_input_opt = args.date_range;
-    let period_opt = args.period;
+    let period = args.period;
     let include_instructions = !args.hide_instructions;
 
     let all_acts = activities::get_all(conn)?;
-    let boat_data = BoatData::create_filtered_data(all_acts, date_input_opt, period_opt);
+    let boat_data = BoatData::create_filtered_data(all_acts, period);
     let default_content = boat_data.to_csv_str(include_instructions);
     let edit_file_path = create_tmp_edit_file(&default_content)?;
 

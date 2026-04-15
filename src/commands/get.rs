@@ -9,7 +9,7 @@ use crate::{
     utils,
 };
 
-pub fn get_current(conn: &mut Connection, args: &cli::PrintActivityArgs) -> Result<()> {
+pub fn get_current(conn: &Connection, args: &cli::PrintActivityArgs) -> Result<()> {
     match activities::get_current_ongoing(conn)? {
         Some(current) => {
             info!("got current activity: {current:?}");

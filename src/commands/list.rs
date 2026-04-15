@@ -12,30 +12,25 @@ use crate::{
     utils::{self, date::DateTimeRenderMode},
 };
 
-pub fn list_activities(conn: &mut Connection, args: &cli::ListActivityArgs) -> Result<()> {
-    info!("getting all activities");
-    let db_acts: Vec<_> = activities::get_all(conn)?;
-    let boat_data = BoatData::create_filtered_data(db_acts, args.date_range, args.period);
-
-    if args.show_summary {
-        info!("showing summary");
-        if !args.use_json_format {
-            info!("using JSON format for summary");
-            let date_msg = match args.date_range {
-                Some(dt_range) => Some(dt_range.to_string()),
-                None => args.period.map(|p| p.to_string()),
-            };
-
-            if let Some(date_msg) = date_msg {
-                info!("using custom date msg for summary");
-                println!("{} {}\n", "Summary:".underline(), date_msg.green());
-            }
-        }
-
-        return list_activity_summaries(&boat_data, args.show_all, args.use_json_format);
-    }
-
-    list_activity_logs(&boat_data, args)
+pub fn show_report() -> Result<()> {
+    todo!()
+    // if args.show_summary {
+    //     info!("showing summary");
+    //     if !args.use_json_format {
+    //         info!("using JSON format for summary");
+    //         let date_msg = match args.date_range {
+    //             Some(dt_range) => Some(dt_range.to_string()),
+    //             None => args.period.map(|p| p.to_string()),
+    //         };
+    //
+    //         if let Some(date_msg) = date_msg {
+    //             info!("using custom date msg for summary");
+    //             println!("{} {}\n", "Summary:".underline(), date_msg.green());
+    //         }
+    //     }
+    //
+    //     return list_activity_summaries(&boat_data, args.show_all, args.use_json_format);
+    // }
 }
 
 fn list_activity_summaries(boat_data: &BoatData, show_all: bool, use_json: bool) -> Result<()> {
@@ -60,14 +55,18 @@ fn list_activity_summaries(boat_data: &BoatData, show_all: bool, use_json: bool)
     Ok(())
 }
 
-fn list_activity_logs(boat_data: &BoatData, args: &cli::ListActivityArgs) -> Result<()> {
+pub fn list_activity_logs(conn: &Connection, args: &cli::FilterActivitiesArgs) -> Result<()> {
+    info!("getting all activities");
+    let db_acts: Vec<_> = activities::get_all(conn)?;
+    let boat_data = BoatData::create_filtered_data(db_acts, args.period);
+
     info!("listing individual activity logs");
     let prt_logs = boat_data.get_printable_logs();
 
-    if args.no_grouping {
-        info!("activity logs will not be grouped by date");
-        return utils::common::list_printable_items(&prt_logs, args.use_json_format);
-    }
+    // if args.no_grouping {
+    //     info!("activity logs will not be grouped by date");
+    //     return utils::common::list_printable_items(&prt_logs, args.use_json_format);
+    // }
 
     let act_logs_by_date = group_by_date(&prt_logs);
 

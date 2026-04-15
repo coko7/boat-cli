@@ -22,8 +22,7 @@ pub struct BoatData {
 impl BoatData {
     pub fn create_filtered_data(
         db_activities: Vec<DatabaseActivity>,
-        date_input_opt: Option<cli::DateInput>,
-        period_opt: Option<cli::Period>,
+        period_input: cli::PeriodInput,
     ) -> Self {
         info!("creating filtered boat data");
         let activities = db_activities
@@ -38,9 +37,7 @@ impl BoatData {
                 let filtered_logs = db_act
                     .logs
                     .into_iter()
-                    .filter(|log| {
-                        utils::common::matches_date_filter(log, date_input_opt, period_opt)
-                    })
+                    .filter(|log| utils::common::matches_period_filter(log, &period_input))
                     .collect();
                 (db_act.id, filtered_logs)
             })

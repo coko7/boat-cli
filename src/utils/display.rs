@@ -51,7 +51,7 @@ pub fn started_activity_msg(activity: &DatabaseActivity, start_dt: DateTime<Loca
     )
 }
 
-pub fn invaid_activity_id(id: Id) -> String {
+pub fn invalid_activity_id(id: Id) -> String {
     format!("#{id} does not exist").red().to_string()
 }
 

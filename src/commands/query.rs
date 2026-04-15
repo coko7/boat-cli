@@ -6,9 +6,9 @@ use rusqlite::Connection;
 
 use crate::{cli, models::tag::PrintableTag, utils};
 
-pub fn query_subcommand(conn: &mut Connection, command: &cli::QuerySubcommand) -> Result<()> {
-    todo!()
-}
+// pub fn query_subcommand(conn: &mut Connection, command: &cli::QuerySubcommand) -> Result<()> {
+//     todo!()
+// }
 
 fn list_tags(conn: &mut Connection, args: &cli::ListArgs) -> Result<()> {
     let mut all_tags: Vec<_> = tags::get_all(conn)?

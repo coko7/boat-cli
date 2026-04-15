@@ -10,7 +10,7 @@ use crate::{cli, commands::pause_current, utils};
 pub fn start(conn: &mut Connection, args: &cli::SelectActivityArgs) -> Result<()> {
     let Ok(to_start) = activities::get_by_id(conn, args.activity_id) else {
         info!("cannot start because ID is invalid: {}", args.activity_id);
-        bail!(utils::display::invaid_activity_id(args.activity_id));
+        bail!(utils::display::invalid_activity_id(args.activity_id));
     };
 
     if let Some(current) = activities::get_current_ongoing(conn)? {

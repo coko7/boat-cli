@@ -6,7 +6,7 @@ use serde::Serialize;
 use std::collections::HashSet;
 
 use crate::{
-    cli::{DateInput, Period},
+    cli::{PeriodInput, PresetPeriod},
     models::{RowPrintable, TablePrintable},
     utils,
 };
@@ -37,56 +37,57 @@ pub fn tags_str(tags: &HashSet<String>) -> String {
     tags.join(",")
 }
 
-pub fn matches_date_filter(
-    log: &DatabaseLog,
-    date_input_opt: Option<DateInput>,
-    period_opt: Option<Period>,
-) -> bool {
-    if let Some(date_range) = date_input_opt {
-        matches_date_range(log, &date_range)
-    } else if let Some(period) = period_opt {
-        matches_period(log, &period)
-    } else {
-        debug!("no period / date filter provided, retaining activity log");
-        true
+pub fn matches_period_filter(log: &DatabaseLog, period_input: &PeriodInput) -> bool {
+    match period_input {
+        PeriodInput::Preset(preset_period) => matches_period(log, preset_period),
+        PeriodInput::Single(date) => matches_date(log, date),
+        PeriodInput::Range {
+            start,
+            end,
+            inclusive,
+        } => matches_date_range(log, start, end, *inclusive),
     }
 }
 
-pub fn matches_period(log: &DatabaseLog, period: &Period) -> bool {
+pub fn matches_period(log: &DatabaseLog, period: &PresetPeriod) -> bool {
     debug!("checking if {log:?} matches the given period: {period:?}");
 
     match period {
-        Period::Today => utils::date::is_today(log.starts_at),
-        Period::Yesterday => utils::date::is_yesterday(log.starts_at),
-        Period::ThisWeek => utils::date::is_this_week(log.starts_at),
-        Period::LastWeek => utils::date::is_last_week(log.starts_at),
-        Period::ThisMonth => utils::date::is_this_month(log.starts_at),
-        Period::LastMonth => utils::date::is_last_month(log.starts_at),
+        PresetPeriod::Today => utils::date::is_today(log.starts_at),
+        PresetPeriod::Yesterday => utils::date::is_yesterday(log.starts_at),
+        PresetPeriod::ThisWeek => utils::date::is_this_week(log.starts_at),
+        PresetPeriod::LastWeek => utils::date::is_last_week(log.starts_at),
+        PresetPeriod::ThisMonth => utils::date::is_this_month(log.starts_at),
+        PresetPeriod::LastMonth => utils::date::is_last_month(log.starts_at),
+        PresetPeriod::AllTime => todo!(),
     }
 }
 
-pub fn matches_date_range(log: &DatabaseLog, date_range: &DateInput) -> bool {
-    debug!("checking if {log:?} matches the given date_range: {date_range:?}");
+pub fn matches_date(log: &DatabaseLog, date: &NaiveDate) -> bool {
+    log.starts_at.date_naive() == *date
+        && log.ends_at.unwrap_or(Local::now().into()).date_naive() == *date
+}
+
+pub fn matches_date_range(
+    log: &DatabaseLog,
+    range_start: &NaiveDate,
+    range_end: &NaiveDate,
+    inclusive: bool,
+) -> bool {
+    debug!(
+        "checking if {log:?} matches the given date_range: {range_start:?}, {range_end:?}, {inclusive}"
+    );
 
     let log_start = log.starts_at.date_naive();
     let log_end = log.ends_at.unwrap_or(Local::now().into()).date_naive();
 
-    match date_range {
-        DateInput::Single(naive_date) => log_start == *naive_date && log_end == *naive_date,
-        DateInput::Range {
-            start,
-            end,
-            inclusive,
-        } => {
-            let log_ends_before_range_end = if *inclusive {
-                log_end <= *end
-            } else {
-                log_end < *end
-            };
+    let log_ends_before_range_end = if inclusive {
+        log_end <= *range_end
+    } else {
+        log_end < *range_end
+    };
 
-            log_start >= *start && log_ends_before_range_end
-        }
-    }
+    log_start >= *range_start && log_ends_before_range_end
 }
 
 pub fn get_date_info_msg(today: NaiveDate, compare_to: NaiveDate) -> String {
