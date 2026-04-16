@@ -3,9 +3,13 @@ use boat_lib::repository::activities_repository as activities;
 use log::info;
 use rusqlite::Connection;
 
-use crate::{cli, utils};
+use crate::{cli, config::Configuration, utils};
 
-pub fn delete(conn: &mut Connection, args: &cli::SelectActivityArgs) -> Result<()> {
+pub fn delete(
+    config: &Configuration,
+    conn: &mut Connection,
+    args: &cli::SelectActivityArgs,
+) -> Result<()> {
     let Ok(to_delete) = activities::get_by_id(conn, args.activity_id) else {
         info!("cannot delete because ID is invalid: {}", args.activity_id);
         bail!(utils::display::invalid_activity_id(args.activity_id));

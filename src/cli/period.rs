@@ -1,9 +1,11 @@
 use chrono::{Datelike, Local, Months, NaiveDate};
-use std::str::FromStr;
+use log::debug;
+use serde::{Deserialize, Serialize};
+use std::{fmt::Display, str::FromStr};
 
 use crate::utils::{self, date::DateTimeRenderMode};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum PeriodInput {
     Preset(PresetPeriod),
     Single(NaiveDate),
@@ -12,6 +14,12 @@ pub enum PeriodInput {
         end: NaiveDate,
         inclusive: bool,
     },
+}
+
+impl Default for PeriodInput {
+    fn default() -> Self {
+        Self::Preset(PresetPeriod::AllTime)
+    }
 }
 
 impl PeriodInput {
@@ -23,6 +31,7 @@ impl FromStr for PeriodInput {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        debug!("period input from: {s}");
         let s = s.to_lowercase();
         // Handle presets
         match s.as_str() {
@@ -40,6 +49,7 @@ impl FromStr for PeriodInput {
             "last-month" | "lm" | "lmo" | "yestermonth" | "ym" | "ymo" => {
                 return Ok(PeriodInput::Preset(PresetPeriod::LastMonth));
             }
+            "all-time" | "all" => return Ok(PeriodInput::Preset(PresetPeriod::AllTime)),
             _ => {}
         }
 
@@ -91,7 +101,7 @@ impl std::fmt::Display for PeriodInput {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
 pub enum PresetPeriod {
     Today,
     Yesterday,
@@ -103,12 +113,28 @@ pub enum PresetPeriod {
     AllTime,
 }
 
-impl std::fmt::Display for PresetPeriod {
+impl Display for PresetPeriod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = (match self {
+            PresetPeriod::Today => "today",
+            PresetPeriod::Yesterday => "yesterday",
+            PresetPeriod::ThisWeek => "this-week",
+            PresetPeriod::LastWeek => "last-week",
+            PresetPeriod::ThisMonth => "this-month",
+            PresetPeriod::LastMonth => "last-month",
+            PresetPeriod::AllTime => "all-time",
+        })
+        .to_string();
+        write!(f, "{str}")
+    }
+}
+
+impl PresetPeriod {
+    pub fn display_pretty(&self) -> String {
         let now = Local::now();
         let last_month = now - Months::new(1);
 
-        let period = match self {
+        match self {
             PresetPeriod::Today => "Today".to_string(),
             PresetPeriod::Yesterday => "Yesterday".to_string(),
             PresetPeriod::ThisWeek => "This week".to_string(),
@@ -116,7 +142,6 @@ impl std::fmt::Display for PresetPeriod {
             PresetPeriod::ThisMonth => format!("{} {}", now.format("%B"), now.year()),
             PresetPeriod::LastMonth => format!("{} {}", last_month.format("%B"), last_month.year()),
             PresetPeriod::AllTime => "All time".to_string(),
-        };
-        write!(f, "{period}")
+        }
     }
 }

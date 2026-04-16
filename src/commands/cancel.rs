@@ -3,9 +3,9 @@ use boat_lib::repository::activities_repository as activities;
 use log::info;
 use rusqlite::Connection;
 
-use crate::utils;
+use crate::{config::Configuration, utils};
 
-pub fn cancel_current(conn: &mut Connection) -> Result<()> {
+pub fn cancel_current(config: &Configuration, conn: &mut Connection) -> Result<()> {
     match activities::get_current_ongoing(conn)? {
         Some(current) => {
             info!("cancelling current activity: {current:?}");

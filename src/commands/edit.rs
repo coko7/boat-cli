@@ -11,9 +11,13 @@ use rusqlite::Connection;
 use std::{env, fs, path::PathBuf, process::Command};
 use yansi::Paint;
 
-use crate::{cli::EditLogsArgs, models::boat_data::BoatData};
+use crate::{cli::EditLogsArgs, config::Configuration, models::boat_data::BoatData};
 
-pub fn edit(conn: &mut rusqlite::Connection, args: &EditLogsArgs) -> Result<()> {
+pub fn edit(
+    config: &Configuration,
+    conn: &mut rusqlite::Connection,
+    args: &EditLogsArgs,
+) -> Result<()> {
     let period = args.period;
     let include_instructions = !args.hide_instructions;
 

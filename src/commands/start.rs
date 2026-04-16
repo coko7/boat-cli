@@ -5,9 +5,13 @@ use log::info;
 use rusqlite::Connection;
 use yansi::Paint;
 
-use crate::{cli, commands::pause_current, utils};
+use crate::{cli, commands::pause_current, config::Configuration, utils};
 
-pub fn start(conn: &mut Connection, args: &cli::SelectActivityArgs) -> Result<()> {
+pub fn start(
+    config: &Configuration,
+    conn: &mut Connection,
+    args: &cli::SelectActivityArgs,
+) -> Result<()> {
     let Ok(to_start) = activities::get_by_id(conn, args.activity_id) else {
         info!("cannot start because ID is invalid: {}", args.activity_id);
         bail!(utils::display::invalid_activity_id(args.activity_id));
@@ -23,7 +27,7 @@ pub fn start(conn: &mut Connection, args: &cli::SelectActivityArgs) -> Result<()
         }
 
         info!("pausing current...");
-        pause_current(conn)?;
+        pause_current(config, conn)?;
     }
 
     info!("about to start: {to_start:?}");

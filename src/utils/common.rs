@@ -59,7 +59,7 @@ pub fn matches_period(log: &DatabaseLog, period: &PresetPeriod) -> bool {
         PresetPeriod::LastWeek => utils::date::is_last_week(log.starts_at),
         PresetPeriod::ThisMonth => utils::date::is_this_month(log.starts_at),
         PresetPeriod::LastMonth => utils::date::is_last_month(log.starts_at),
-        PresetPeriod::AllTime => todo!(),
+        PresetPeriod::AllTime => true,
     }
 }
 

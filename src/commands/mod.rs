@@ -18,4 +18,5 @@ pub use self::get::get_current;
 pub use self::list::list_activity_logs;
 pub use self::modify::modify;
 pub use self::pause::pause_current;
+pub use self::report::show_report;
 pub use self::start::start;

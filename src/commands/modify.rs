@@ -3,9 +3,13 @@ use boat_lib::repository::activities_repository as activities;
 use log::info;
 use rusqlite::Connection;
 
-use crate::{cli, utils};
+use crate::{cli, config::Configuration, utils};
 
-pub fn modify(conn: &mut Connection, args: &cli::ModifyActivityArgs) -> Result<()> {
+pub fn modify(
+    config: &Configuration,
+    conn: &mut Connection,
+    args: &cli::ModifyActivityArgs,
+) -> Result<()> {
     let Ok(old) = activities::get_by_id(conn, args.id) else {
         info!("cannot modify because ID is invalid: {}", args.id);
         bail!(utils::display::invalid_activity_id(args.id));

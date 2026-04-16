@@ -4,61 +4,26 @@ use chrono::{Local, NaiveDate};
 use log::info;
 use rusqlite::Connection;
 use std::collections::BTreeMap;
-use yansi::Paint;
 
 use crate::{
-    cli::{self},
+    cli::{self, PeriodInput},
+    config::Configuration,
     models::{activity_log::PrintableActivityLog, boat_data::BoatData},
     utils::{self, date::DateTimeRenderMode},
 };
 
-pub fn show_report() -> Result<()> {
-    todo!()
-    // if args.show_summary {
-    //     info!("showing summary");
-    //     if !args.use_json_format {
-    //         info!("using JSON format for summary");
-    //         let date_msg = match args.date_range {
-    //             Some(dt_range) => Some(dt_range.to_string()),
-    //             None => args.period.map(|p| p.to_string()),
-    //         };
-    //
-    //         if let Some(date_msg) = date_msg {
-    //             info!("using custom date msg for summary");
-    //             println!("{} {}\n", "Summary:".underline(), date_msg.green());
-    //         }
-    //     }
-    //
-    //     return list_activity_summaries(&boat_data, args.show_all, args.use_json_format);
-    // }
-}
-
-fn list_activity_summaries(boat_data: &BoatData, show_all: bool, use_json: bool) -> Result<()> {
-    info!("listing activity summaries (show_all: {show_all})");
-    let prt_acts = boat_data
-        .get_printable_activities()
-        .into_iter()
-        .filter(|act| show_all || act.duration > 0)
-        .collect();
-
-    utils::common::list_printable_items(&prt_acts, use_json)?;
-
-    if !use_json && !prt_acts.is_empty() {
-        let total_sec: i64 = prt_acts.iter().map(|pa| pa.duration).sum();
-        println!(
-            "{} {}",
-            "Total:".underline(),
-            utils::date::pretty_format_duration(total_sec, false).green()
-        );
-    }
-
-    Ok(())
-}
-
-pub fn list_activity_logs(conn: &Connection, args: &cli::FilterActivitiesArgs) -> Result<()> {
+pub fn list_activity_logs(
+    config: &Configuration,
+    conn: &Connection,
+    args: &cli::FilterActivitiesArgs,
+) -> Result<()> {
     info!("getting all activities");
+    let period = args
+        .period
+        .unwrap_or(PeriodInput::Preset(cli::PresetPeriod::AllTime));
+
     let db_acts: Vec<_> = activities::get_all(conn)?;
-    let boat_data = BoatData::create_filtered_data(db_acts, args.period);
+    let boat_data = BoatData::create_filtered_data(db_acts, period);
 
     info!("listing individual activity logs");
     let prt_logs = boat_data.get_printable_logs();

@@ -4,15 +4,71 @@ use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use std::{env, fs, path::PathBuf};
 
+use crate::cli::PeriodInput;
+
 pub const APP_NAME: &str = "boat";
 pub const CONFIG_VAR: &str = "BOAT_CONFIG";
 pub const DEFAULT_CONFIG_PATH: &str = "config.toml";
 pub const DEFAULT_DB_FILE: &str = "boat.db";
 
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct NewCommandConfig {
+    #[serde(rename = "auto-start")]
+    pub auto_start: Option<bool>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct CancelCommandConfig {
+    pub confirm: Option<bool>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct EditCommandConfig {
+    pub period: Option<String>,
+    #[serde(rename = "hide-instructions")]
+    pub hide_instructions: Option<bool>,
+    #[serde(rename = "hide-activity-definitions")]
+    pub hide_activity_definitions: Option<bool>,
+    pub editor: Option<String>,
+    pub confirm: Option<bool>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct ListCommandConfig {
+    pub period: Option<String>,
+    pub sort: Option<String>,
+    #[serde(rename = "group-by")]
+    pub group_by: Option<String>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct ReportCommandConfig {
+    pub period: Option<String>,
+    pub sort: Option<String>,
+    #[serde(rename = "group-by")]
+    pub group_by: Option<String>,
+    pub format: Option<String>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct CommandsConfig {
+    pub new: Option<NewCommandConfig>,
+    pub cancel: Option<CancelCommandConfig>,
+    pub list: Option<ListCommandConfig>,
+    pub report: Option<ReportCommandConfig>,
+    pub edit: Option<EditCommandConfig>,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Configuration {
     #[serde(rename = "database_path")]
     pub database_path: PathBuf,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub period: Option<PeriodInput>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub commands: Option<CommandsConfig>,
 }
 
 impl Configuration {
@@ -23,7 +79,11 @@ impl Configuration {
             .context("config file should have a parent directory")?;
         let database_path = config_dir.join(DEFAULT_DB_FILE);
 
-        Ok(Self { database_path })
+        Ok(Self {
+            database_path,
+            period: None,
+            commands: None,
+        })
     }
 
     pub fn load_from_fs() -> Result<Configuration> {

@@ -4,6 +4,7 @@ use clap::Parser;
 use clap::{ArgAction, Args, Subcommand, ValueEnum};
 
 use crate::cli::PeriodInput;
+use crate::cli::PresetPeriod;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -74,7 +75,7 @@ pub enum Commands {
     List(FilterActivitiesArgs),
 
     /// Show activity summaries
-    #[command(alias = "r", alias = "report")]
+    #[command(alias = "r", alias = "rep")]
     Report(FilterActivitiesArgs),
 
     // /// Query boat objects
@@ -153,7 +154,7 @@ pub struct FilterActivitiesArgs {
         long = "period",
         help = "Period: day|d, week|w, month|m, year|y, <date>, or <start>..<end>"
     )]
-    pub period: PeriodInput,
+    pub period: Option<PeriodInput>,
 
     /// Specify how entries should be grouped
     #[arg(short = 'g', long = "group-by")]
@@ -163,7 +164,7 @@ pub struct FilterActivitiesArgs {
     // #[arg(short = 's', long = "sort-by")]
     // pub sort_by: SortInput,
     /// Show all activities, even the ones with no log
-    #[arg(short = 'a', long = "all", conflicts_with = "no_grouping")]
+    #[arg(short = 'a', long = "all")]
     pub show_all: bool,
 
     /// Output in JSON

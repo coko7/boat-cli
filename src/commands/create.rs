@@ -6,11 +6,16 @@ use rusqlite::Connection;
 
 use crate::{
     cli,
+    config::Configuration,
     models::activity::{PrintableActivity, SimpleActivity},
     utils,
 };
 
-pub fn create(conn: &mut Connection, args: &cli::CreateActivityArgs) -> Result<()> {
+pub fn create(
+    config: &Configuration,
+    conn: &mut Connection,
+    args: &cli::CreateActivityArgs,
+) -> Result<()> {
     let new = NewActivity {
         name: args.name.clone(),
         description: args.description.clone(),
