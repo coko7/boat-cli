@@ -11,6 +11,14 @@ use crate::{
     utils,
 };
 
+pub fn resolve_tri_state(a: bool, b: bool, c: bool) -> bool {
+    match (a, b) {
+        (true, false) => true,
+        (false, true) => false,
+        _ => c, // neither specified → fallback
+    }
+}
+
 pub fn list_printable_items<T: RowPrintable + Serialize>(
     items: &Vec<T>,
     show_as_json: bool,
@@ -41,11 +49,7 @@ pub fn matches_period_filter(log: &DatabaseLog, period_input: &PeriodInput) -> b
     match period_input {
         PeriodInput::Preset(preset_period) => matches_period(log, preset_period),
         PeriodInput::Single(date) => matches_date(log, date),
-        PeriodInput::Range {
-            start,
-            end,
-            inclusive,
-        } => matches_date_range(log, start, end, *inclusive),
+        PeriodInput::Range { start, end } => matches_date_range(log, start, end),
     }
 }
 
@@ -72,22 +76,12 @@ pub fn matches_date_range(
     log: &DatabaseLog,
     range_start: &NaiveDate,
     range_end: &NaiveDate,
-    inclusive: bool,
 ) -> bool {
-    debug!(
-        "checking if {log:?} matches the given date_range: {range_start:?}, {range_end:?}, {inclusive}"
-    );
+    debug!("checking if {log:?} matches the given date_range: {range_start:?}, {range_end:?}");
 
     let log_start = log.starts_at.date_naive();
     let log_end = log.ends_at.unwrap_or(Local::now().into()).date_naive();
-
-    let log_ends_before_range_end = if inclusive {
-        log_end <= *range_end
-    } else {
-        log_end < *range_end
-    };
-
-    log_start >= *range_start && log_ends_before_range_end
+    log_start >= *range_start && log_end <= *range_end
 }
 
 pub fn get_date_info_msg(today: NaiveDate, compare_to: NaiveDate) -> String {

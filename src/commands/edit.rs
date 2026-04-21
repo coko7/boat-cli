@@ -11,19 +11,42 @@ use rusqlite::Connection;
 use std::{env, fs, path::PathBuf, process::Command};
 use yansi::Paint;
 
-use crate::{cli::EditLogsArgs, config::Configuration, models::boat_data::BoatData};
+use crate::{
+    cli::{self, EditLogsArgs, PeriodInput},
+    config::Configuration,
+    models::boat_data::BoatData,
+    utils,
+};
 
 pub fn edit(
     config: &Configuration,
     conn: &mut rusqlite::Connection,
     args: &EditLogsArgs,
 ) -> Result<()> {
-    let period = args.period;
-    let include_instructions = !args.hide_instructions;
+    let period = args
+        .period
+        .or(config.commands.edit.period)
+        .or(config.period)
+        .unwrap_or(PeriodInput::Preset(cli::PresetPeriod::AllTime));
+    info!("using period: {period}");
+
+    let include_instructions = utils::common::resolve_tri_state(
+        args.show_instructions,
+        args.hide_instructions,
+        config.commands.edit.show_instructions,
+    );
+    info!("include instructions? {include_instructions}");
+
+    let include_activity_definitions = utils::common::resolve_tri_state(
+        args.show_activity_definitions,
+        args.hide_activity_definitions,
+        config.commands.edit.show_activity_definitions,
+    );
+    info!("include activity definitions? {include_activity_definitions}");
 
     let all_acts = activities::get_all(conn)?;
     let boat_data = BoatData::create_filtered_data(all_acts, period);
-    let default_content = boat_data.to_csv_str(include_instructions);
+    let default_content = boat_data.to_csv_str(include_instructions, include_activity_definitions);
     let edit_file_path = create_tmp_edit_file(&default_content)?;
 
     let editor = env::var("EDITOR").unwrap_or_else(|_| "vim".to_string());

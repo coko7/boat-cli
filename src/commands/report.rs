@@ -17,11 +17,11 @@ pub fn show_report(
     args: &cli::FilterActivitiesArgs,
 ) -> Result<()> {
     info!("getting all activities");
-    let period = args.period.unwrap_or(
-        config
-            .period
-            .unwrap_or(PeriodInput::Preset(cli::PresetPeriod::AllTime)),
-    );
+    let period = args
+        .period
+        .or(config.commands.report.period)
+        .or(config.period)
+        .unwrap_or(PeriodInput::Preset(cli::PresetPeriod::AllTime));
     info!("using period: {period}");
 
     let db_acts: Vec<_> = activities::get_all(conn)?;
@@ -45,15 +45,15 @@ pub fn show_report(
         // }
     }
 
-    list_activity_summaries(&boat_data, args.show_all, args.use_json_format)
+    list_activity_summaries(&boat_data, args.use_json_format)
 }
 
-fn list_activity_summaries(boat_data: &BoatData, show_all: bool, use_json: bool) -> Result<()> {
-    info!("listing activity summaries (show_all: {show_all})");
+fn list_activity_summaries(boat_data: &BoatData, use_json: bool) -> Result<()> {
+    info!("listing activity summaries");
     let prt_acts = boat_data
         .get_printable_activities()
         .into_iter()
-        .filter(|act| show_all || act.duration > 0)
+        .filter(|act| act.duration > 0)
         .collect();
 
     utils::common::list_printable_items(&prt_acts, use_json)?;

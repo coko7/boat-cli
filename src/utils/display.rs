@@ -51,8 +51,23 @@ pub fn started_activity_msg(activity: &DatabaseActivity, start_dt: DateTime<Loca
     )
 }
 
-pub fn invalid_activity_id(id: Id) -> String {
+pub fn invalid_activity_name(activity_name: &str) -> String {
+    format!(
+        "the activity name cannot only contain digits: \"{}\"",
+        activity_name
+    )
+    .red()
+    .to_string()
+}
+
+pub fn activity_id_does_not_exist(id: Id) -> String {
     format!("#{id} does not exist").red().to_string()
+}
+
+pub fn invalid_activity_id_format(id_str: &str) -> String {
+    format!("invalid activity ID format: \"{}\"", id_str)
+        .red()
+        .to_string()
 }
 
 pub fn deleted_activity_msg(activity: &DatabaseActivity) -> String {

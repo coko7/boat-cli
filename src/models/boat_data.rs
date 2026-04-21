@@ -79,7 +79,11 @@ impl BoatData {
         prt_logs
     }
 
-    pub fn to_csv_str(&self, include_instructions: bool) -> String {
+    pub fn to_csv_str(
+        &self,
+        include_instructions: bool,
+        include_activity_definitions: bool,
+    ) -> String {
         let mut csv_data = String::new();
 
         if include_instructions {
@@ -92,9 +96,11 @@ impl BoatData {
             csv_data.push_str("# You may only edit activity logs here.\n#\n");
         }
 
-        csv_data.push_str("# Activity definitions:\n");
-        csv_data.push_str("# | ID | Name | Description | Tags |\n");
-        csv_data.push_str("# | -- | ---- | ----------- | ---- |\n");
+        if include_activity_definitions {
+            csv_data.push_str("# Activity definitions:\n");
+            csv_data.push_str("# | ID | Name | Description | Tags |\n");
+            csv_data.push_str("# | -- | ---- | ----------- | ---- |\n");
+        }
 
         let mut activities = self.activities.values().collect::<Vec<_>>();
         activities.sort_by_key(|act| act.id);
@@ -106,6 +112,16 @@ impl BoatData {
                 continue;
             }
 
+            for log in related_logs {
+                let local_starts_at = log.starts_at.with_timezone(&chrono::Local);
+                let local_ends_at = log.ends_at.map(|dt| dt.with_timezone(&chrono::Local));
+                act_logs.push((act.id, log.id, local_starts_at, local_ends_at));
+            }
+
+            if !include_activity_definitions {
+                continue;
+            }
+
             let act_csv = format!(
                 "# | {} | {} | {} | {} |\n",
                 act.id,
@@ -114,15 +130,11 @@ impl BoatData {
                 utils::common::tags_str(&act.tags)
             );
             csv_data.push_str(&act_csv);
-
-            for log in related_logs {
-                let local_starts_at = log.starts_at.with_timezone(&chrono::Local);
-                let local_ends_at = log.ends_at.map(|dt| dt.with_timezone(&chrono::Local));
-                act_logs.push((act.id, log.id, local_starts_at, local_ends_at));
-            }
         }
 
-        csv_data.push_str("\n\n");
+        if include_activity_definitions {
+            csv_data.push_str("\n\n");
+        }
 
         if include_instructions {
             csv_data.push_str(

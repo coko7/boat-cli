@@ -6,7 +6,6 @@ pub mod get;
 pub mod list;
 pub mod modify;
 pub mod pause;
-pub mod query;
 pub mod report;
 pub mod start;
 

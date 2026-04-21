@@ -12,7 +12,7 @@ pub fn delete(
 ) -> Result<()> {
     let Ok(to_delete) = activities::get_by_id(conn, args.activity_id) else {
         info!("cannot delete because ID is invalid: {}", args.activity_id);
-        bail!(utils::display::invalid_activity_id(args.activity_id));
+        bail!(utils::display::activity_id_does_not_exist(args.activity_id));
     };
 
     info!("deleting activity: {to_delete:?}");

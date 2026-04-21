@@ -12,7 +12,7 @@ pub fn modify(
 ) -> Result<()> {
     let Ok(old) = activities::get_by_id(conn, args.id) else {
         info!("cannot modify because ID is invalid: {}", args.id);
-        bail!(utils::display::invalid_activity_id(args.id));
+        bail!(utils::display::activity_id_does_not_exist(args.id));
     };
 
     info!("about to modify activity: {old:?}");

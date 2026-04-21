@@ -4,7 +4,6 @@ use clap::Parser;
 use clap::{ArgAction, Args, Subcommand, ValueEnum};
 
 use crate::cli::PeriodInput;
-use crate::cli::PresetPeriod;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -38,7 +37,7 @@ pub enum Commands {
         alias = "continue",
         alias = "resume"
     )]
-    Start(SelectActivityArgs),
+    Start(StartActivityArgs),
 
     /// Cancel the current activity
     #[command(alias = "c", alias = "can")]
@@ -102,28 +101,6 @@ pub enum Commands {
     // ^^^ or maybe export 'x' ???
 }
 
-#[derive(Subcommand)]
-#[command(rename_all = "kebab-case")]
-pub enum QuerySubcommand {
-    /// Manage logs
-    #[command(name = "logs", alias = "l", alias = "log")]
-    Logs(FilterActivitiesArgs),
-
-    /// Manage activities
-    #[command(
-        name = "acts",
-        alias = "act",
-        alias = "a",
-        alias = "activity",
-        alias = "activities"
-    )]
-    Activities(ListArgs),
-
-    /// Manage tags
-    #[command(name = "tags", alias = "t", alias = "tag")]
-    Tags(ListArgs),
-}
-
 #[derive(Debug, Clone, Copy, ValueEnum, Default)]
 pub enum GroupBy {
     #[value(name = "none", alias = "no")]
@@ -148,7 +125,7 @@ pub enum SortBy {
 
 #[derive(Args, Debug)]
 pub struct FilterActivitiesArgs {
-    /// Restrict to entries matching a given time period
+    /// Restrict to entries matching the given <PERIOD>
     #[arg(
         short = 'p',
         long = "period",
@@ -163,23 +140,12 @@ pub struct FilterActivitiesArgs {
     // /// Specify how entries should be sorted
     // #[arg(short = 's', long = "sort-by")]
     // pub sort_by: SortInput,
-    /// Show all activities, even the ones with no log
-    #[arg(short = 'a', long = "all")]
-    pub show_all: bool,
-
-    /// Output in JSON
+    /// Output in JSON format
     #[arg(short = 'j', long = "json")]
     pub use_json_format: bool,
     // /// Only show tags
     // #[arg(short = 't', long = "tags-only", conflicts_with = "no_grouping")]
     // pub tags_only: bool,
-}
-
-#[derive(Args, Debug)]
-pub struct ListArgs {
-    /// Output in JSON
-    #[arg(short = 'j', long = "json")]
-    pub use_json_format: bool,
 }
 
 #[derive(Args, Debug, Default)]
@@ -188,6 +154,12 @@ pub struct PrintActivityArgs {
     /// Output in JSON
     #[arg(short = 'j', long = "json")]
     pub use_json_format: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct StartActivityArgs {
+    /// ID of an existing activity or name for a new activity
+    pub activity_handle: String,
 }
 
 #[derive(Args, Debug)]
@@ -245,17 +217,27 @@ pub struct UpdateGroup {
 
 #[derive(Args, Debug)]
 pub struct EditLogsArgs {
-    /// Restrict to entries starting in the given <PERIOD>
+    /// Restrict to entries matching the given <PERIOD>
     #[arg(
         short = 'p',
         long = "period",
-        value_name = "PERIOD",
-        value_enum,
-        conflicts_with = "date_range"
+        help = "Period: day|d, week|w, month|m, year|y, <date>, or <start>..<end>"
     )]
-    pub period: PeriodInput,
+    pub period: Option<PeriodInput>,
+
+    /// Include instruction comments in the editable file
+    #[arg(short = 'i', long = "with-instructions", alias = "with-instr", action = ArgAction::SetTrue, conflicts_with = "hide_instructions")]
+    pub show_instructions: bool,
 
     /// Do not include instruction comments in the editable file
-    #[arg(short = 'n', long = "no-instructions")]
+    #[arg(short = 'I', long = "no-instructions", alias = "no-instr", action = ArgAction::SetTrue, conflicts_with = "show_instructions")]
     pub hide_instructions: bool,
+
+    /// Include activity definitions comments in the editable file
+    #[arg(short = 'd', long = "with-activity-definitions", alias = "with-act-defs", alias = "with-defs", action = ArgAction::SetTrue, conflicts_with = "hide_activity_definitions")]
+    pub show_activity_definitions: bool,
+
+    /// Do not include activity definitions comments in the editable file
+    #[arg(short = 'D', long = "no-activity-definitions", alias = "no-act-defs", alias = "no-defs", action = ArgAction::SetTrue, conflicts_with = "show_activity_definitions")]
+    pub hide_activity_definitions: bool,
 }

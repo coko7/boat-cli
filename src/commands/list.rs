@@ -20,7 +20,10 @@ pub fn list_activity_logs(
     info!("getting all activities");
     let period = args
         .period
+        .or(config.commands.list.period)
+        .or(config.period)
         .unwrap_or(PeriodInput::Preset(cli::PresetPeriod::AllTime));
+    info!("using period: {period}");
 
     let db_acts: Vec<_> = activities::get_all(conn)?;
     let boat_data = BoatData::create_filtered_data(db_acts, period);
