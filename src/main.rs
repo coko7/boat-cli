@@ -46,7 +46,7 @@ fn process_args(args: Cli) -> Result<()> {
     match &args.command {
         cli::Commands::New(args) => commands::create(&config, &mut conn, args),
         cli::Commands::Start(args) => commands::start(&config, &mut conn, args),
-        cli::Commands::Cancel => commands::cancel_current(&config, &mut conn),
+        cli::Commands::Cancel(args) => commands::cancel_current(&config, &mut conn, args),
         cli::Commands::Pause => commands::pause_current(&config, &mut conn),
         cli::Commands::Modify(args) => commands::modify(&config, &mut conn, args),
         cli::Commands::Edit(args) => commands::edit(&config, &mut conn, args),

@@ -31,6 +31,7 @@ pub fn start(
                     description: None,
                     tags: vec![],
                     auto_start: true,
+                    no_auto_start: false,
                     use_json_format: false,
                 },
             );

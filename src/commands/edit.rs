@@ -44,6 +44,13 @@ pub fn edit(
     );
     info!("include activity definitions? {include_activity_definitions}");
 
+    let ask_for_confirmation = utils::common::resolve_tri_state(
+        args.confirm,
+        args.no_confirm,
+        config.commands.edit.confirm,
+    );
+    info!("ask user for confirmation? {ask_for_confirmation}");
+
     let all_acts = activities::get_all(conn)?;
     let boat_data = BoatData::create_filtered_data(all_acts, period);
     let default_content = boat_data.to_csv_str(include_instructions, include_activity_definitions);
@@ -93,7 +100,7 @@ pub fn edit(
         return Ok(());
     }
 
-    if !confirm_changes(&to_update)? {
+    if ask_for_confirmation && !confirm_changes(&to_update)? {
         println!("user aborted the operation, no changes will be made");
         return Ok(());
     }

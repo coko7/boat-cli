@@ -96,6 +96,35 @@ database_path = "/home/<user>/.config/boat/boat.db"
 ```
 
 You can override the default configuration file path by setting the `BOAT_CONFIG` environment variable.
+Here is the full default configuration:
+
+```toml
+database_path = "/home/<user>/.config/boat/boat.db"
+period = "all"
+format = "plain"
+
+[commands.new]
+auto_start = false
+
+[commands.start]
+quick_start = true
+
+[commands.cancel]
+confirm = true
+
+[commands.edit]
+show_instructions = true
+show_activity_definitions = true
+confirm = true
+
+[commands.delete]
+confirm = true
+
+[commands.list]
+group_by = "day"
+
+[commands.report]
+```
 
 ## ✨ Usage
 

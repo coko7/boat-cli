@@ -4,7 +4,7 @@ use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use std::{env, fs, path::PathBuf};
 
-use crate::cli::PeriodInput;
+use crate::cli::{PeriodInput, args::GroupBy};
 
 pub const APP_NAME: &str = "boat";
 pub const CONFIG_VAR: &str = "BOAT_CONFIG";
@@ -33,13 +33,12 @@ pub struct Configuration {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub period: Option<PeriodInput>,
 
-    /// Default output format to use ('plain', 'json', 'csv')
-    #[serde(rename = "format")]
-    pub format: OutputFormat,
-
     /// Configuration values for the various commands
     #[serde(rename = "commands")]
     pub commands: CommandsConfig,
+    // /// Default output format to use ('plain', 'json', 'csv')
+    // #[serde(rename = "format")]
+    // pub format: OutputFormat,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -59,7 +58,7 @@ pub struct CommandsConfig {
 /// Configuration values for the new command
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct NewCommandConfig {
-    /// Start the new activity automatically
+    /// Whether the new activity should start automatically
     #[serde(rename = "auto_start")]
     pub auto_start: bool,
 }
@@ -120,10 +119,14 @@ pub struct GetCommandConfig;
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ListCommandConfig {
     /// Restrict to entries matching the given <PERIOD>
+    #[serde(rename = "period")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub period: Option<PeriodInput>,
-    // /// Specify how entries should be grouped
-    // #[serde(rename = "group_by")]
-    // pub group_by: Option<String>,
+
+    /// Specify how entries should be grouped
+    #[serde(rename = "group_by")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub group_by: Option<GroupBy>,
     // /// Specify how entries should be sorted
     // #[serde(rename = "sort_by")]
     // pub sort_by: Option<String>,
@@ -135,10 +138,13 @@ pub struct ListCommandConfig {
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ReportCommandConfig {
     /// Restrict to entries matching the given <PERIOD>
+    #[serde(rename = "period")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub period: Option<PeriodInput>,
     // /// Specify how entries should be grouped
     // #[serde(rename = "group_by")]
-    // pub group_by: Option<String>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub group_by: Option<GroupBy>,
     // /// Specify how entries should be sorted
     // #[serde(rename = "sort_by")]
     // pub sort_by: Option<String>,
@@ -157,7 +163,7 @@ impl Configuration {
         Ok(Self {
             database_path,
             period: None,
-            format: OutputFormat::Plain,
+            // format: OutputFormat::Plain,
             commands: CommandsConfig {
                 new: NewCommandConfig { auto_start: false },
                 start: StartCommandConfig { quick_start: false },
@@ -174,7 +180,7 @@ impl Configuration {
                 // get: GetCommandConfig,
                 list: ListCommandConfig {
                     period: None,
-                    // group_by: None,
+                    group_by: None,
                     // sort_by: None,
                     // format: None,
                 },

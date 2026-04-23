@@ -1,9 +1,11 @@
 use anyhow::Result;
 use boat_lib::models::log::Log as DatabaseLog;
 use chrono::{Local, NaiveDate};
+use dialoguer::Confirm;
 use log::debug;
 use serde::Serialize;
 use std::collections::HashSet;
+use yansi::Paint;
 
 use crate::{
     cli::{PeriodInput, PresetPeriod},
@@ -17,6 +19,15 @@ pub fn resolve_tri_state(a: bool, b: bool, c: bool) -> bool {
         (false, true) => false,
         _ => c, // neither specified → fallback
     }
+}
+
+pub fn prompt_for_confirmation(msg: &str, default_value: bool) -> Result<bool> {
+    let proceed = Confirm::new()
+        .with_prompt(Paint::yellow(&msg).to_string())
+        .default(default_value)
+        .interact()?;
+
+    Ok(proceed)
 }
 
 pub fn list_printable_items<T: RowPrintable + Serialize>(

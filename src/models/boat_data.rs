@@ -6,7 +6,7 @@ use log::info;
 use std::{cmp::Reverse, collections::HashMap};
 
 use crate::{
-    cli,
+    cli::{self, args::GroupBy},
     models::{
         activity::{PrintableActivity, SimpleActivity},
         activity_log::PrintableActivityLog,

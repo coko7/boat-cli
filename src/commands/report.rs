@@ -1,11 +1,11 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use boat_lib::repository::activities_repository as activities;
 use log::info;
 use rusqlite::Connection;
 use yansi::Paint;
 
 use crate::{
-    cli::{self, PeriodInput},
+    cli::{self, PeriodInput, args::GroupBy},
     config::Configuration,
     models::boat_data::BoatData,
     utils,
@@ -16,7 +16,6 @@ pub fn show_report(
     conn: &Connection,
     args: &cli::FilterActivitiesArgs,
 ) -> Result<()> {
-    info!("getting all activities");
     let period = args
         .period
         .or(config.commands.report.period)
@@ -24,10 +23,28 @@ pub fn show_report(
         .unwrap_or(PeriodInput::Preset(cli::PresetPeriod::AllTime));
     info!("using period: {period}");
 
+    if args.group_by.is_some() {
+        bail!("grouping is not supported for report command yet");
+    }
+
+    // let group_by_value = args
+    //     .group_by
+    //     .or(config.commands.list.group_by)
+    //     .unwrap_or(GroupBy::None);
+    // info!("grouping by: {group_by_value}");
+
+    info!("getting all activities");
     let db_acts: Vec<_> = activities::get_all(conn)?;
     let boat_data = BoatData::create_filtered_data(db_acts, period);
 
-    info!("listing individual activity logs");
+    info!("listing activity summaries");
+    let prt_acts = boat_data
+        .get_printable_activities()
+        .into_iter()
+        .filter(|act| act.duration > 0)
+        .collect::<Vec<_>>();
+
+    // let grouped_acts = utils::common::group_by(&prt_acts, group_by_value);
 
     info!("showing summary");
     if !args.use_json_format {

@@ -2,6 +2,8 @@ use boat_lib::repository::Id;
 use clap::ColorChoice;
 use clap::Parser;
 use clap::{ArgAction, Args, Subcommand, ValueEnum};
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::cli::PeriodInput;
 
@@ -41,7 +43,7 @@ pub enum Commands {
 
     /// Cancel the current activity
     #[command(alias = "c", alias = "can")]
-    Cancel,
+    Cancel(CancelActivityArgs),
 
     /// Pause/stop the current activity
     #[command(alias = "p", alias = "stop")]
@@ -63,7 +65,7 @@ pub enum Commands {
         alias = "rem",
         alias = "remove"
     )]
-    Delete(SelectActivityArgs),
+    Delete(DeleteActivityArgs),
 
     /// Get the current activity
     #[command(alias = "g")]
@@ -101,19 +103,41 @@ pub enum Commands {
     // ^^^ or maybe export 'x' ???
 }
 
-#[derive(Debug, Clone, Copy, ValueEnum, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, ValueEnum, Default, PartialEq, Eq)]
 pub enum GroupBy {
     #[value(name = "none", alias = "no")]
     #[default]
+    #[serde(rename = "none")]
     None,
+
     #[value(name = "day", alias = "d")]
+    #[serde(rename = "day")]
     Day,
+
     #[value(name = "week", alias = "wk", alias = "w")]
+    #[serde(rename = "week")]
     Week,
+
     #[value(name = "month", alias = "mo", alias = "m")]
+    #[serde(rename = "month")]
     Month,
+
     #[value(name = "year", alias = "y")]
+    #[serde(rename = "year")]
     Year,
+}
+
+impl std::fmt::Display for GroupBy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            GroupBy::None => "none",
+            GroupBy::Day => "day",
+            GroupBy::Week => "week",
+            GroupBy::Month => "month",
+            GroupBy::Year => "year",
+        };
+        write!(f, "{str}")
+    }
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum, Default)]
@@ -135,7 +159,7 @@ pub struct FilterActivitiesArgs {
 
     /// Specify how entries should be grouped
     #[arg(short = 'g', long = "group-by")]
-    pub group_by: bool,
+    pub group_by: Option<GroupBy>,
 
     // /// Specify how entries should be sorted
     // #[arg(short = 's', long = "sort-by")]
@@ -169,6 +193,31 @@ pub struct SelectActivityArgs {
 }
 
 #[derive(Args, Debug)]
+pub struct DeleteActivityArgs {
+    /// ID of the activity to delete
+    pub id: Id,
+
+    /// Asks for confirmation before deleting the activity
+    #[arg(short = 'c', long = "confirm", action = ArgAction::SetTrue, conflicts_with = "no_confirm")]
+    pub confirm: bool,
+
+    /// Skip the confirmation when deleting the activity
+    #[arg(short = 'C', long = "no-confirm", action = ArgAction::SetTrue, conflicts_with = "confirm")]
+    pub no_confirm: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct CancelActivityArgs {
+    /// Asks for confirmation before cancelling the current activity
+    #[arg(short = 'c', long = "confirm", action = ArgAction::SetTrue, conflicts_with = "no_confirm")]
+    pub confirm: bool,
+
+    /// Skip the confirmation when cancelling the current activity
+    #[arg(short = 'C', long = "no-confirm", action = ArgAction::SetTrue, conflicts_with = "confirm")]
+    pub no_confirm: bool,
+}
+
+#[derive(Args, Debug)]
 pub struct CreateActivityArgs {
     /// Name of the activity
     pub name: String,
@@ -181,9 +230,13 @@ pub struct CreateActivityArgs {
     #[arg(short, long, value_delimiter = ',', action = ArgAction::Append)]
     pub tags: Vec<String>,
 
-    /// Start the new activity automatically
-    #[arg(short = 's', long = "start")]
+    /// Start the new activity automatically after creation
+    #[arg(short = 's', long = "start-now", action = ArgAction::SetTrue, conflicts_with = "no_auto_start")]
     pub auto_start: bool,
+
+    /// Prevent the new activity from starting automatically
+    #[arg(short = 'S', long = "no-start-now", action = ArgAction::SetTrue, conflicts_with = "auto_start")]
+    pub no_auto_start: bool,
 
     /// Output in JSON
     #[arg(short = 'j', long = "json")]
@@ -197,6 +250,14 @@ pub struct ModifyActivityArgs {
 
     #[clap(flatten)]
     pub update: UpdateGroup,
+
+    /// Asks for confirmation before applying changes
+    #[arg(short = 'c', long = "confirm", action = ArgAction::SetTrue, conflicts_with = "no_confirm")]
+    pub confirm: bool,
+
+    /// Skip the confirmation before applying changes
+    #[arg(short = 'C', long = "no-confirm", action = ArgAction::SetTrue, conflicts_with = "confirm")]
+    pub no_confirm: bool,
 }
 
 #[derive(Args, Debug)]
@@ -240,4 +301,12 @@ pub struct EditLogsArgs {
     /// Do not include activity definitions comments in the editable file
     #[arg(short = 'D', long = "no-activity-definitions", alias = "no-act-defs", alias = "no-defs", action = ArgAction::SetTrue, conflicts_with = "show_activity_definitions")]
     pub hide_activity_definitions: bool,
+
+    /// Asks for confirmation before applying changes
+    #[arg(short = 'c', long = "confirm", action = ArgAction::SetTrue, conflicts_with = "no_confirm")]
+    pub confirm: bool,
+
+    /// Skip the confirmation before applying changes
+    #[arg(short = 'C', long = "no-confirm", action = ArgAction::SetTrue, conflicts_with = "confirm")]
+    pub no_confirm: bool,
 }
