@@ -227,14 +227,20 @@ mod date_check_tests {
     #[test]
     fn render_naive_date_date_only() {
         let d = NaiveDate::from_ymd_opt(2024, 4, 15).unwrap();
-        assert_eq!(DateTimeRenderMode::DateOnly.render_naive_date(&d), "2024-04-15");
+        assert_eq!(
+            DateTimeRenderMode::DateOnly.render_naive_date(&d),
+            "2024-04-15"
+        );
     }
 
     #[test]
     fn render_date_time_date_only() {
         use chrono::{TimeZone, Utc};
         let dt = Utc.with_ymd_and_hms(2024, 4, 15, 13, 30, 0).unwrap();
-        assert_eq!(DateTimeRenderMode::DateOnly.render_date_time(dt), "2024-04-15");
+        assert_eq!(
+            DateTimeRenderMode::DateOnly.render_date_time(dt),
+            "2024-04-15"
+        );
     }
 
     #[test]

@@ -135,7 +135,9 @@ mod tests {
         DatabaseLog {
             id: 1,
             activity_id: 1,
-            starts_at: Utc.with_ymd_and_hms(starts.0, starts.1, starts.2, 10, 0, 0).unwrap(),
+            starts_at: Utc
+                .with_ymd_and_hms(starts.0, starts.1, starts.2, 10, 0, 0)
+                .unwrap(),
             ends_at: ends.map(|(y, m, d)| Utc.with_ymd_and_hms(y, m, d, 11, 0, 0).unwrap()),
         }
     }
@@ -219,25 +221,41 @@ mod tests {
     #[test]
     fn matches_date_range_log_within_bounds() {
         let log = make_log((2024, 4, 12), Some((2024, 4, 12)));
-        assert!(matches_date_range(&log, &date("2024-04-10"), &date("2024-04-15")));
+        assert!(matches_date_range(
+            &log,
+            &date("2024-04-10"),
+            &date("2024-04-15")
+        ));
     }
 
     #[test]
     fn matches_date_range_log_at_exact_bounds() {
         let log = make_log((2024, 4, 10), Some((2024, 4, 10)));
-        assert!(matches_date_range(&log, &date("2024-04-10"), &date("2024-04-10")));
+        assert!(matches_date_range(
+            &log,
+            &date("2024-04-10"),
+            &date("2024-04-10")
+        ));
     }
 
     #[test]
     fn matches_date_range_start_before_range() {
         let log = make_log((2024, 4, 9), Some((2024, 4, 12)));
-        assert!(!matches_date_range(&log, &date("2024-04-10"), &date("2024-04-15")));
+        assert!(!matches_date_range(
+            &log,
+            &date("2024-04-10"),
+            &date("2024-04-15")
+        ));
     }
 
     #[test]
     fn matches_date_range_end_after_range() {
         let log = make_log((2024, 4, 12), Some((2024, 4, 16)));
-        assert!(!matches_date_range(&log, &date("2024-04-10"), &date("2024-04-15")));
+        assert!(!matches_date_range(
+            &log,
+            &date("2024-04-10"),
+            &date("2024-04-15")
+        ));
     }
 
     // --- get_date_info_msg ---
