@@ -14,15 +14,15 @@ fn delete_existing_succeeds() -> Result<()> {
     run_boat(["new", "to-delete"], &config_path).success();
     run_boat(["start", "1"], &config_path).success();
     run_boat(["pause"], &config_path).success();
-    run_boat(["list", "--all"], &config_path)
+    run_boat(["list"], &config_path)
         .success()
         .stdout(predicates::str::contains("to-delete"));
 
     // Delete
-    run_boat(["delete", "1"], &config_path).success();
+    run_boat(["delete", "1", "--no-confirm"], &config_path).success();
 
     // Should not appear in the list anymore
-    run_boat(["list", "--all", "--json"], &config_path)
+    run_boat(["list", "--json"], &config_path)
         .success()
         .stdout(predicates::str::contains("to-delete").not());
 

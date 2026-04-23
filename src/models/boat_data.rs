@@ -171,3 +171,192 @@ impl BoatData {
         csv_data
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use boat_lib::models::log::Log as DatabaseLog;
+    use chrono::{TimeZone, Utc};
+    use std::collections::HashMap;
+
+    fn make_activity(id: Id, name: &str) -> SimpleActivity {
+        SimpleActivity {
+            id,
+            name: name.to_string(),
+            description: None,
+            tags: std::collections::HashSet::new(),
+        }
+    }
+
+    fn make_log(id: Id, activity_id: Id, start_h: u32, end_h: Option<u32>) -> DatabaseLog {
+        let base = Utc.with_ymd_and_hms(2024, 4, 15, start_h, 0, 0).unwrap();
+        DatabaseLog {
+            id,
+            activity_id,
+            starts_at: base,
+            ends_at: end_h.map(|h| Utc.with_ymd_and_hms(2024, 4, 15, h, 0, 0).unwrap()),
+        }
+    }
+
+    fn boat_data(acts: Vec<(Id, &str)>, logs: Vec<(Id, Vec<DatabaseLog>)>) -> BoatData {
+        let activities: HashMap<Id, SimpleActivity> = acts
+            .into_iter()
+            .map(|(id, name)| (id, make_activity(id, name)))
+            .collect();
+        let logs: HashMap<Id, Vec<DatabaseLog>> = logs.into_iter().collect();
+        BoatData { activities, logs }
+    }
+
+    // --- get_printable_activities ---
+
+    #[test]
+    fn get_printable_activities_sorted_by_duration_desc() {
+        let data = boat_data(
+            vec![(1, "short"), (2, "long")],
+            vec![
+                (1, vec![make_log(10, 1, 10, Some(11))]), // 1h
+                (2, vec![make_log(20, 2, 8, Some(12))]),  // 4h
+            ],
+        );
+        let acts = data.get_printable_activities();
+        assert_eq!(acts.len(), 2);
+        assert!(acts[0].duration > acts[1].duration);
+        assert_eq!(acts[0].name, "long");
+    }
+
+    #[test]
+    fn get_printable_activities_activity_with_no_logs_has_zero_duration() {
+        let data = boat_data(vec![(1, "idle")], vec![(1, vec![])]);
+        let acts = data.get_printable_activities();
+        assert_eq!(acts[0].duration, 0);
+        assert!(!acts[0].ongoing);
+    }
+
+    // --- get_printable_logs ---
+
+    #[test]
+    fn get_printable_logs_sorted_by_start_asc() {
+        let data = boat_data(
+            vec![(1, "work")],
+            vec![(
+                1,
+                vec![
+                    make_log(2, 1, 14, Some(15)), // 14:00
+                    make_log(1, 1, 9, Some(10)),  // 09:00 — earlier
+                ],
+            )],
+        );
+        let logs = data.get_printable_logs();
+        assert_eq!(logs.len(), 2);
+        assert!(logs[0].log.starts_at < logs[1].log.starts_at);
+    }
+
+    // --- to_csv_str ---
+
+    fn data_line_count(csv: &str) -> usize {
+        csv.lines()
+            .filter(|l| !l.is_empty() && !l.trim_start().starts_with('#'))
+            .count()
+    }
+
+    #[test]
+    fn to_csv_str_contains_log_line() {
+        let data = boat_data(
+            vec![(1, "coding")],
+            vec![(1, vec![make_log(1, 1, 10, Some(11))])],
+        );
+        let csv = data.to_csv_str(false, false);
+        assert_eq!(data_line_count(&csv), 1);
+        let data_line = csv
+            .lines()
+            .find(|l| !l.trim_start().starts_with('#'))
+            .unwrap();
+        // format: act_id,log_id,starts_at,ends_at
+        let fields: Vec<&str> = data_line.split(',').collect();
+        assert_eq!(
+            fields.len(),
+            4,
+            "log line should have 4 comma-separated fields"
+        );
+        assert_eq!(fields[0], "1");
+        assert_eq!(fields[1], "1");
+    }
+
+    #[test]
+    fn to_csv_str_open_ended_log_has_empty_ends_at() {
+        let data = boat_data(
+            vec![(1, "coding")],
+            vec![(1, vec![make_log(1, 1, 10, None)])],
+        );
+        let csv = data.to_csv_str(false, false);
+        let data_line = csv
+            .lines()
+            .find(|l| !l.trim_start().starts_with('#'))
+            .unwrap();
+        // last field before newline should be empty
+        assert!(
+            data_line.ends_with(','),
+            "ends_at should be empty for open-ended log"
+        );
+    }
+
+    #[test]
+    fn to_csv_str_includes_instructions_when_requested() {
+        let data = boat_data(
+            vec![(1, "t")],
+            vec![(1, vec![make_log(1, 1, 10, Some(11))])],
+        );
+        let with = data.to_csv_str(true, false);
+        let without = data.to_csv_str(false, false);
+        assert!(with.contains("# This is a CSV export"));
+        assert!(!without.contains("# This is a CSV export"));
+    }
+
+    #[test]
+    fn to_csv_str_includes_activity_definitions_when_requested() {
+        let data = boat_data(
+            vec![(1, "t")],
+            vec![(1, vec![make_log(1, 1, 10, Some(11))])],
+        );
+        let with = data.to_csv_str(false, true);
+        let without = data.to_csv_str(false, false);
+        assert!(with.contains("# Activity definitions:"));
+        assert!(!without.contains("# Activity definitions:"));
+    }
+
+    #[test]
+    fn to_csv_str_logs_sorted_chronologically() {
+        let data = boat_data(
+            vec![(1, "work")],
+            vec![(
+                1,
+                vec![
+                    make_log(2, 1, 14, Some(15)), // later
+                    make_log(1, 1, 9, Some(10)),  // earlier
+                ],
+            )],
+        );
+        let csv = data.to_csv_str(false, false);
+        let data_lines: Vec<&str> = csv
+            .lines()
+            .filter(|l| !l.trim_start().starts_with('#'))
+            .collect();
+        assert_eq!(data_lines.len(), 2);
+        // first line should be log id=1 (9:00), second should be log id=2 (14:00)
+        assert!(
+            data_lines[0].starts_with("1,1,"),
+            "earlier log should appear first"
+        );
+        assert!(
+            data_lines[1].starts_with("1,2,"),
+            "later log should appear second"
+        );
+    }
+
+    #[test]
+    fn to_csv_str_activity_with_no_logs_is_omitted() {
+        let data = boat_data(vec![(1, "idle")], vec![(1, vec![])]);
+        let csv = data.to_csv_str(false, false);
+        assert_eq!(data_line_count(&csv), 0);
+    }
+}

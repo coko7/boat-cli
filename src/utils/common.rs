@@ -124,3 +124,162 @@ pub fn get_date_info_msg(today: NaiveDate, compare_to: NaiveDate) -> String {
 
     format!("{diff_months} months ago")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use boat_lib::models::log::Log as DatabaseLog;
+    use chrono::{NaiveDate, TimeZone, Utc};
+
+    fn make_log(starts: (i32, u32, u32), ends: Option<(i32, u32, u32)>) -> DatabaseLog {
+        DatabaseLog {
+            id: 1,
+            activity_id: 1,
+            starts_at: Utc.with_ymd_and_hms(starts.0, starts.1, starts.2, 10, 0, 0).unwrap(),
+            ends_at: ends.map(|(y, m, d)| Utc.with_ymd_and_hms(y, m, d, 11, 0, 0).unwrap()),
+        }
+    }
+
+    fn date(s: &str) -> NaiveDate {
+        NaiveDate::parse_from_str(s, "%Y-%m-%d").unwrap()
+    }
+
+    // --- resolve_tri_state ---
+
+    #[test]
+    fn resolve_tri_state_a_overrides() {
+        assert!(resolve_tri_state(true, false, false));
+        assert!(resolve_tri_state(true, false, true));
+    }
+
+    #[test]
+    fn resolve_tri_state_b_overrides() {
+        assert!(!resolve_tri_state(false, true, true));
+        assert!(!resolve_tri_state(false, true, false));
+    }
+
+    #[test]
+    fn resolve_tri_state_falls_back_to_c() {
+        assert!(resolve_tri_state(false, false, true));
+        assert!(!resolve_tri_state(false, false, false));
+    }
+
+    #[test]
+    fn resolve_tri_state_both_ab_set_uses_c() {
+        assert!(resolve_tri_state(true, true, true));
+        assert!(!resolve_tri_state(true, true, false));
+    }
+
+    // --- tags_str ---
+
+    #[test]
+    fn tags_str_empty() {
+        assert_eq!(tags_str(&std::collections::HashSet::new()), "");
+    }
+
+    #[test]
+    fn tags_str_single() {
+        let mut tags = std::collections::HashSet::new();
+        tags.insert("rust".to_string());
+        assert_eq!(tags_str(&tags), "rust");
+    }
+
+    #[test]
+    fn tags_str_sorted_alphabetically() {
+        let mut tags = std::collections::HashSet::new();
+        tags.insert("zzz".to_string());
+        tags.insert("aaa".to_string());
+        tags.insert("mmm".to_string());
+        assert_eq!(tags_str(&tags), "aaa,mmm,zzz");
+    }
+
+    // --- matches_date ---
+
+    #[test]
+    fn matches_date_log_on_same_day() {
+        let log = make_log((2024, 4, 15), Some((2024, 4, 15)));
+        assert!(matches_date(&log, &date("2024-04-15")));
+    }
+
+    #[test]
+    fn matches_date_log_on_different_day() {
+        let log = make_log((2024, 4, 15), Some((2024, 4, 15)));
+        assert!(!matches_date(&log, &date("2024-04-14")));
+    }
+
+    #[test]
+    fn matches_date_log_spanning_two_days_does_not_match() {
+        let log = make_log((2024, 4, 14), Some((2024, 4, 15)));
+        assert!(!matches_date(&log, &date("2024-04-14")));
+        assert!(!matches_date(&log, &date("2024-04-15")));
+    }
+
+    // --- matches_date_range ---
+
+    #[test]
+    fn matches_date_range_log_within_bounds() {
+        let log = make_log((2024, 4, 12), Some((2024, 4, 12)));
+        assert!(matches_date_range(&log, &date("2024-04-10"), &date("2024-04-15")));
+    }
+
+    #[test]
+    fn matches_date_range_log_at_exact_bounds() {
+        let log = make_log((2024, 4, 10), Some((2024, 4, 10)));
+        assert!(matches_date_range(&log, &date("2024-04-10"), &date("2024-04-10")));
+    }
+
+    #[test]
+    fn matches_date_range_start_before_range() {
+        let log = make_log((2024, 4, 9), Some((2024, 4, 12)));
+        assert!(!matches_date_range(&log, &date("2024-04-10"), &date("2024-04-15")));
+    }
+
+    #[test]
+    fn matches_date_range_end_after_range() {
+        let log = make_log((2024, 4, 12), Some((2024, 4, 16)));
+        assert!(!matches_date_range(&log, &date("2024-04-10"), &date("2024-04-15")));
+    }
+
+    // --- get_date_info_msg ---
+
+    #[test]
+    fn get_date_info_msg_today() {
+        let today = date("2024-06-15");
+        assert_eq!(get_date_info_msg(today, today), "Today");
+    }
+
+    #[test]
+    fn get_date_info_msg_yesterday() {
+        let today = date("2024-06-15");
+        assert_eq!(get_date_info_msg(today, date("2024-06-14")), "Yesterday");
+    }
+
+    #[test]
+    fn get_date_info_msg_days_ago() {
+        let today = date("2024-06-15");
+        assert_eq!(get_date_info_msg(today, date("2024-06-12")), "3 days ago");
+        // boundary: 7 is still "days ago" (the <= 7 check comes before the weeks check)
+        assert_eq!(get_date_info_msg(today, date("2024-06-08")), "7 days ago");
+    }
+
+    #[test]
+    fn get_date_info_msg_weeks_ago() {
+        let today = date("2024-06-15");
+        assert_eq!(get_date_info_msg(today, date("2024-06-07")), "1 week ago");
+        assert_eq!(get_date_info_msg(today, date("2024-06-01")), "2 weeks ago");
+    }
+
+    #[test]
+    fn get_date_info_msg_last_month() {
+        let today = date("2024-06-15");
+        // 35 days ago: diff_weeks = 5, diff_months = 1 → "Last month"
+        assert_eq!(get_date_info_msg(today, date("2024-05-11")), "Last month");
+    }
+
+    #[test]
+    fn get_date_info_msg_months_ago() {
+        let today = date("2024-06-15");
+        // 75 days ago: diff_weeks = 10, diff_months = 2
+        assert_eq!(get_date_info_msg(today, date("2024-04-01")), "2 months ago");
+    }
+}

@@ -156,6 +156,7 @@ mod tests {
     struct Wrapper {
         val: PeriodInput,
     }
+
     #[test]
     fn periodinput_toml_serializes_and_deserializes_as_string_forms() {
         let cases = [
@@ -167,8 +168,8 @@ mod tests {
                 PeriodInput::from_str("2023-01-02..2023-01-06").unwrap(),
             ),
             (
-                "2023-01-02..=2023-01-07",
-                PeriodInput::from_str("2023-01-02..=2023-01-07").unwrap(),
+                "2023-01-02..2023-01-07",
+                PeriodInput::from_str("2023-01-02..2023-01-07").unwrap(),
             ),
         ];
         for (s, val) in cases {
@@ -188,5 +189,100 @@ mod tests {
         }
         let err = toml::from_str::<Wrapper>("val = \"not-a-real-period\"");
         assert!(err.is_err());
+    }
+
+    // --- PeriodInput::from_str aliases ---
+
+    #[test]
+    fn periodinput_from_str_preset_aliases() {
+        let cases = [
+            ("td", PresetPeriod::Today),
+            ("tod", PresetPeriod::Today),
+            ("yd", PresetPeriod::Yesterday),
+            ("ytd", PresetPeriod::Yesterday),
+            ("tw", PresetPeriod::ThisWeek),
+            ("twk", PresetPeriod::ThisWeek),
+            ("wk", PresetPeriod::ThisWeek),
+            ("lw", PresetPeriod::LastWeek),
+            ("ywk", PresetPeriod::LastWeek),
+            ("tm", PresetPeriod::ThisMonth),
+            ("mo", PresetPeriod::ThisMonth),
+            ("lm", PresetPeriod::LastMonth),
+            ("ymo", PresetPeriod::LastMonth),
+            ("all", PresetPeriod::AllTime),
+        ];
+        for (input, expected) in cases {
+            assert_eq!(
+                PeriodInput::from_str(input).unwrap(),
+                PeriodInput::Preset(expected),
+                "failed for alias: {input}"
+            );
+        }
+    }
+
+    #[test]
+    fn periodinput_from_str_range_start_after_end_fails() {
+        let result = PeriodInput::from_str("2024-06-15..2024-06-01");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn periodinput_from_str_invalid_string_fails() {
+        assert!(PeriodInput::from_str("not-a-date").is_err());
+    }
+
+    #[test]
+    fn periodinput_from_str_invalid_date_fails() {
+        assert!(PeriodInput::from_str("2024-13-01").is_err());
+    }
+
+    // --- PeriodInput Display ---
+
+    #[test]
+    fn periodinput_display_preset() {
+        assert_eq!(
+            format!("{}", PeriodInput::Preset(PresetPeriod::Today)),
+            "today"
+        );
+        assert_eq!(
+            format!("{}", PeriodInput::Preset(PresetPeriod::LastWeek)),
+            "last-week"
+        );
+        assert_eq!(
+            format!("{}", PeriodInput::Preset(PresetPeriod::AllTime)),
+            "all-time"
+        );
+    }
+
+    #[test]
+    fn periodinput_display_single_date() {
+        let input = PeriodInput::Single(NaiveDate::from_ymd_opt(2024, 4, 15).unwrap());
+        assert_eq!(format!("{input}"), "2024-04-15");
+    }
+
+    #[test]
+    fn periodinput_display_range() {
+        let input = PeriodInput::Range {
+            start: NaiveDate::from_ymd_opt(2024, 4, 10).unwrap(),
+            end: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap(),
+        };
+        assert_eq!(format!("{input}"), "2024-04-10..2024-04-15");
+    }
+
+    // --- PresetPeriod::display_pretty ---
+
+    #[test]
+    fn preset_period_display_pretty_static_variants() {
+        assert_eq!(PresetPeriod::Today.display_pretty(), "Today");
+        assert_eq!(PresetPeriod::Yesterday.display_pretty(), "Yesterday");
+        assert_eq!(PresetPeriod::ThisWeek.display_pretty(), "This week");
+        assert_eq!(PresetPeriod::LastWeek.display_pretty(), "Last week");
+        assert_eq!(PresetPeriod::AllTime.display_pretty(), "All time");
+    }
+
+    #[test]
+    fn preset_period_display_pretty_dynamic_variants_are_nonempty() {
+        assert!(!PresetPeriod::ThisMonth.display_pretty().is_empty());
+        assert!(!PresetPeriod::LastMonth.display_pretty().is_empty());
     }
 }

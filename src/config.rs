@@ -250,3 +250,49 @@ pub fn initialize_config() -> Result<()> {
     fs::write(config_path, toml)?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_config_file_path_uses_env_var() {
+        let expected = std::path::PathBuf::from("/tmp/boat_test_config.toml");
+        // SAFETY: single-threaded test; env var is restored immediately after
+        unsafe { std::env::set_var(CONFIG_VAR, &expected) };
+        let result = get_config_file_path().unwrap();
+        unsafe { std::env::remove_var(CONFIG_VAR) };
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn get_config_file_path_fallback_contains_app_name() {
+        // SAFETY: single-threaded test; removing a var we don't depend on elsewhere
+        unsafe { std::env::remove_var(CONFIG_VAR) };
+        let path = get_config_file_path().unwrap();
+        assert!(
+            path.to_string_lossy().contains(APP_NAME),
+            "default config path should contain '{APP_NAME}'"
+        );
+    }
+
+    #[test]
+    fn configuration_create_default_has_expected_defaults() {
+        unsafe { std::env::remove_var(CONFIG_VAR) };
+        let config = Configuration::create_default().unwrap();
+        assert!(!config.commands.new.auto_start);
+        assert!(config.commands.cancel.confirm);
+        assert!(config.commands.delete.confirm);
+        assert!(config.commands.edit.confirm);
+    }
+
+    #[test]
+    fn configuration_to_toml_str_round_trips() {
+        unsafe { std::env::remove_var(CONFIG_VAR) };
+        let config = Configuration::create_default().unwrap();
+        let toml_str = config.to_toml_str().unwrap();
+        assert!(toml_str.contains("database_path"));
+        let restored: Configuration = toml::from_str(&toml_str).unwrap();
+        assert_eq!(restored.database_path, config.database_path);
+    }
+}

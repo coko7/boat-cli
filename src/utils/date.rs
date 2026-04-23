@@ -197,3 +197,143 @@ mod parse_date_tests {
         assert!(e.contains("invalid date"));
     }
 }
+
+#[cfg(test)]
+mod date_check_tests {
+    use super::*;
+    use chrono::{Local, Months};
+
+    // --- pretty_format_duration (long format) ---
+
+    #[test]
+    fn pretty_format_duration_long_format_seconds() {
+        assert_eq!(pretty_format_duration(0, true), "0 seconds");
+        assert_eq!(pretty_format_duration(45, true), "45 seconds");
+    }
+
+    #[test]
+    fn pretty_format_duration_long_format_minutes() {
+        assert_eq!(pretty_format_duration(60, true), "1 minutes");
+        assert_eq!(pretty_format_duration(90, true), "1 minutes");
+    }
+
+    #[test]
+    fn pretty_format_duration_long_format_hours_and_minutes() {
+        assert_eq!(pretty_format_duration(3661, true), "1 hours 1 minutes");
+    }
+
+    // --- DateTimeRenderMode ---
+
+    #[test]
+    fn render_naive_date_date_only() {
+        let d = NaiveDate::from_ymd_opt(2024, 4, 15).unwrap();
+        assert_eq!(DateTimeRenderMode::DateOnly.render_naive_date(&d), "2024-04-15");
+    }
+
+    #[test]
+    fn render_date_time_date_only() {
+        use chrono::{TimeZone, Utc};
+        let dt = Utc.with_ymd_and_hms(2024, 4, 15, 13, 30, 0).unwrap();
+        assert_eq!(DateTimeRenderMode::DateOnly.render_date_time(dt), "2024-04-15");
+    }
+
+    #[test]
+    fn render_date_time_time_only() {
+        use chrono::{TimeZone, Utc};
+        let dt = Utc.with_ymd_and_hms(2024, 4, 15, 13, 30, 0).unwrap();
+        assert_eq!(DateTimeRenderMode::TimeOnly.render_date_time(dt), "13:30");
+    }
+
+    #[test]
+    fn render_date_time_date_and_time() {
+        use chrono::{TimeZone, Utc};
+        let dt = Utc.with_ymd_and_hms(2024, 4, 15, 13, 30, 0).unwrap();
+        assert_eq!(
+            DateTimeRenderMode::DateAndTime.render_date_time(dt),
+            "2024-04-15 13:30"
+        );
+    }
+
+    // --- is_today / is_yesterday ---
+
+    #[test]
+    fn is_today_with_now() {
+        assert!(is_today(Local::now()));
+    }
+
+    #[test]
+    fn is_today_with_yesterday() {
+        assert!(!is_today(Local::now() - Duration::days(1)));
+    }
+
+    #[test]
+    fn is_yesterday_with_one_day_ago() {
+        assert!(is_yesterday(Local::now() - Duration::days(1)));
+    }
+
+    #[test]
+    fn is_yesterday_with_today() {
+        assert!(!is_yesterday(Local::now()));
+    }
+
+    #[test]
+    fn is_yesterday_with_two_days_ago() {
+        assert!(!is_yesterday(Local::now() - Duration::days(2)));
+    }
+
+    // --- is_this_week / is_last_week ---
+
+    #[test]
+    fn is_this_week_with_now() {
+        assert!(is_this_week(Local::now()));
+    }
+
+    #[test]
+    fn is_this_week_with_seven_days_ago() {
+        // 7 days ago is always the previous ISO week
+        assert!(!is_this_week(Local::now() - Duration::days(7)));
+    }
+
+    #[test]
+    fn is_last_week_with_seven_days_ago() {
+        // Subtracting exactly 7 days always lands in the previous ISO week
+        assert!(is_last_week(Local::now() - Duration::days(7)));
+    }
+
+    #[test]
+    fn is_last_week_with_now() {
+        assert!(!is_last_week(Local::now()));
+    }
+
+    #[test]
+    fn is_last_week_with_fourteen_days_ago() {
+        assert!(!is_last_week(Local::now() - Duration::days(14)));
+    }
+
+    // --- is_this_month / is_last_month ---
+
+    #[test]
+    fn is_this_month_with_now() {
+        assert!(is_this_month(Local::now()));
+    }
+
+    #[test]
+    fn is_this_month_with_forty_days_ago() {
+        assert!(!is_this_month(Local::now() - Duration::days(40)));
+    }
+
+    #[test]
+    fn is_last_month_with_last_month() {
+        assert!(is_last_month(Local::now() - Months::new(1)));
+    }
+
+    #[test]
+    fn is_last_month_with_now() {
+        assert!(!is_last_month(Local::now()));
+    }
+
+    #[test]
+    fn is_last_month_with_two_months_ago() {
+        assert!(!is_last_month(Local::now() - Months::new(2)));
+    }
+}
