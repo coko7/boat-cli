@@ -79,6 +79,10 @@ pub enum Commands {
     #[command(alias = "r", alias = "rep")]
     Report(FilterActivitiesArgs),
 
+    /// Generate a default boat config and output to stdout
+    #[command(alias = "i")]
+    Init,
+
     // /// Query boat objects
     // #[command(alias = "q")]
     // Query {
@@ -149,12 +153,8 @@ pub enum SortBy {
 
 #[derive(Args, Debug)]
 pub struct FilterActivitiesArgs {
-    /// Restrict to entries matching the given <PERIOD>
-    #[arg(
-        short = 'p',
-        long = "period",
-        help = "Period: day|d, week|w, month|m, year|y, <date>, or <start>..<end>"
-    )]
+    /// Restrict matches to a given period: today, yesterday... (--period help to see all options)
+    #[arg(short = 'p', long = "period")]
     pub period: Option<PeriodInput>,
 
     /// Specify how entries should be grouped
@@ -164,12 +164,13 @@ pub struct FilterActivitiesArgs {
     // /// Specify how entries should be sorted
     // #[arg(short = 's', long = "sort-by")]
     // pub sort_by: SortInput,
+    /// Filter out entries that do not have all of the specified tags
+    #[arg(short = 't', long = "filter-by-tags", value_name = "TAGS", value_delimiter = ',', action = ArgAction::Append)]
+    pub filter_by_tags: Option<Vec<String>>,
+
     /// Output in JSON format
     #[arg(short = 'j', long = "json")]
     pub use_json_format: bool,
-    // /// Only show tags
-    // #[arg(short = 't', long = "tags-only", conflicts_with = "no_grouping")]
-    // pub tags_only: bool,
 }
 
 #[derive(Args, Debug, Default)]

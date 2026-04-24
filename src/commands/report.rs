@@ -62,17 +62,29 @@ pub fn show_report(
         // }
     }
 
-    list_activity_summaries(&boat_data, args.use_json_format)
+    list_activity_summaries(&boat_data, args.use_json_format, &args.filter_by_tags)
 }
 
-fn list_activity_summaries(boat_data: &BoatData, use_json: bool) -> Result<()> {
-    info!("listing activity summaries");
+fn list_activity_summaries(
+    boat_data: &BoatData,
+    use_json: bool,
+    filter_by_tags: &Option<Vec<String>>,
+) -> Result<()> {
+    info!("filtering logs by tags");
     let prt_acts = boat_data
         .get_printable_activities()
         .into_iter()
         .filter(|act| act.duration > 0)
+        .filter(|act| {
+            if let Some(filter_tags) = filter_by_tags {
+                filter_tags.iter().all(|tag| act.tags.contains(tag))
+            } else {
+                true
+            }
+        })
         .collect();
 
+    info!("listing activity summaries");
     utils::common::list_printable_items(&prt_acts, use_json)?;
 
     if !use_json && !prt_acts.is_empty() {

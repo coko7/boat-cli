@@ -169,7 +169,7 @@ impl Configuration {
             // format: OutputFormat::Plain,
             commands: CommandsConfig {
                 new: NewCommandConfig { auto_start: false },
-                start: StartCommandConfig { quick_start: false },
+                start: StartCommandConfig { quick_start: true },
                 cancel: CancelCommandConfig { confirm: true },
                 // pause: PauseCommandConfig,
                 modify: ModifyCommandConfig { confirm: true },
