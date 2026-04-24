@@ -21,6 +21,9 @@ quick_start = true
 [commands.cancel]
 confirm = true
 
+[commands.modify]
+confirm = true
+
 [commands.edit]
 show_instructions = true
 show_activity_definitions = true

@@ -47,7 +47,7 @@ pub struct CommandsConfig {
     pub start: StartCommandConfig,
     pub cancel: CancelCommandConfig,
     // pub pause: PauseCommandConfig,
-    // pub modify: ModifyCommandConfig,
+    pub modify: ModifyCommandConfig,
     pub edit: EditCommandConfig,
     pub delete: DeleteCommandConfig,
     // pub get: GetCommandConfig,
@@ -84,7 +84,10 @@ pub struct PauseCommandConfig;
 
 /// Configuration values for the modify command
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct ModifyCommandConfig;
+pub struct ModifyCommandConfig {
+    /// Prompts for confirmation before applying modifications to an activity
+    pub confirm: bool,
+}
 
 /// Configuration values for the edit command
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -169,7 +172,7 @@ impl Configuration {
                 start: StartCommandConfig { quick_start: false },
                 cancel: CancelCommandConfig { confirm: true },
                 // pause: PauseCommandConfig,
-                // modify: ModifyCommandConfig,
+                modify: ModifyCommandConfig { confirm: true },
                 edit: EditCommandConfig {
                     period: None,
                     show_instructions: true,

@@ -5,7 +5,7 @@ use rusqlite::Connection;
 use yansi::Paint;
 
 use crate::{
-    cli::{self, PeriodInput, args::GroupBy},
+    cli::{self, PeriodInput},
     config::Configuration,
     models::boat_data::BoatData,
     utils,
