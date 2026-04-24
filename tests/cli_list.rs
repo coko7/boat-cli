@@ -11,7 +11,7 @@ fn list_with_invalid_date_input_fails() -> Result<()> {
 
     run_boat(["list", "--period", "not-a-date"], config_path)
         .failure()
-        .stderr(predicates::str::contains("Provide either a range"));
+        .stderr(predicates::str::contains("Period presets"));
 
     Ok(())
 }
