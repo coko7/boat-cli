@@ -31,6 +31,7 @@ It relies on [`boat-lib`](https://github.com/coko7/boat-lib) for core functions.
   - [Install with a bundled version of SQLite](#install-with-a-bundled-version-of-sqlite)
 - [⚙️ Configuration](#%EF%B8%8F-configuration)
 - [✨ Usage](#-usage)
+- [🔮 Alternatives to boat](-alternatives-to-boat)
 - [🧠 (mostly) Brain made](#-mostly-brain-made)
 
 ## 🚀 Demo
@@ -188,6 +189,448 @@ Like `stop` would have been a better command than `pause` but since it shares th
 Maybe I will drop this in the future, let's see.
 
 _I have included some fallback in case you type `stop`/`remove` instead of `pause`/`delete` 👀_
+
+### New
+
+You can use the `new` command to create a new activity, with an optional **description** and **tags** (comma-separated list). If you want to start the activity immediately, you can include the `-s`/`--start-now` flag:
+
+```console
+$ boat new 'take down prod' -s
+created new #51 "take down prod"
+started #51 "take down prod" at 20:42
+```
+
+If you want to process the output in scripts, you can use the `-j`/`--json` flag:
+
+```console
+$ boat new 'fetch gruvbox wallpaper' \
+  -d 'fetching the latest gruvbox wallpapers online' \
+  -t leisure,ricing -j
+{
+  "id": 52,
+  "name": "fetch gruvbox wallpaper",
+  "description": "fetching the latest gruvbox wallpapers online",
+  "duration": 0,
+  "ongoing": false,
+  "tags": [
+    "leisure",
+    "ricing"
+  ]
+}
+```
+
+Full list of options:
+
+```help
+Create a new activity
+
+Usage: boat new [OPTIONS] <NAME>
+
+Arguments:
+  <NAME>  Name of the activity
+
+Options:
+  -d, --description <DESCRIPTION>  ID of the parent activity
+  -t, --tags <TAGS>                List of tags to apply to the activity
+  -s, --start-now                  Start the new activity automatically after creation
+  -S, --no-start-now               Prevent the new activity from starting automatically
+  -j, --json                       Output in JSON
+  -v, --verbose...                 Increase logging verbosity
+  -q, --quiet...                   Decrease logging verbosity
+  -h, --help                       Print help
+```
+
+### Start
+
+The `start` command may be used to start tracking time for an existing activity.
+It expects an **activity handle** which may be either:
+
+- the ID of an existing activity (e.g. `51`)
+- the name of a new activity to create and start immediately (e.g. `take down prod`)
+
+Since boat uses whole integers as activity IDs, if you provide an activity handle that cannot be parsed as an integer, boat will assume that you want to create a new activity with the provided name and start it immediately.
+
+**Examples:**
+
+With an existing activity ID:
+
+```console
+$ boat start 52
+paused #51 "take down prod" at 20:55
+started #52 "push to master" at 20:55
+```
+
+With a new activity name:
+
+```console
+$ boat start 'work on presenterm slides'
+created new #55 "work on presenterm slides"
+started #55 "work on presenterm slides" at 20:58
+```
+
+> [!TIP]
+> Make sure you have `quick_start` enabled for the `start` command in your config file if you want to be able to start new activities with this command. Otherwise, you will just get an error.
+
+Full list of options:
+
+```help
+Start/resume an activity
+
+Usage: boat start [OPTIONS] <ACTIVITY_HANDLE>
+
+Arguments:
+  <ACTIVITY_HANDLE>  ID of an existing activity or name for a new activity
+
+Options:
+  -v, --verbose...  Increase logging verbosity
+  -q, --quiet...    Decrease logging verbosity
+  -h, --help        Print help
+```
+
+### Cancel
+
+If you started an activity by mistake, you can use the `cancel` command to quickly revert it.
+You can control the confirmation behavior with the `-c`/`--confirm` and `-C`/`--no-confirm` flags or the `confirm` option in the config file.
+
+Full list of options:
+
+```help
+Cancel the current activity
+
+Usage: boat cancel [OPTIONS]
+
+Options:
+  -c, --confirm     Asks for confirmation before cancelling the current activity
+  -C, --no-confirm  Skip the confirmation when cancelling the current activity
+  -v, --verbose...  Increase logging verbosity
+  -q, --quiet...    Decrease logging verbosity
+  -h, --help        Print help
+```
+
+### Pause
+
+To stop tracking time for the current activity, you can use the `pause` command:
+
+```console
+$ boat pause
+paused #55 "work on presenterm slides" at 21:02
+```
+
+Full list of options:
+
+```help
+Pause/stop the current activity
+
+Usage: boat pause [OPTIONS]
+
+Options:
+  -v, --verbose...  Increase logging verbosity
+  -q, --quiet...    Decrease logging verbosity
+  -h, --help        Print help
+```
+
+### Modify
+
+You can modify the **name**, **description**, and **tags** of an existing activity with the `modify` command:
+
+```console
+$ boat new tests
+created new #56 "tests"
+
+$ boat modify
+boat mod 56 -n 'write tests' -d 'write some smoke tests' -t test
+are you sure you want to modify activity #56 "tests"? yes
+modified #56 "write tests"
+```
+
+Full list of options:
+
+```help
+Modify an activity
+
+Usage: boat modify [OPTIONS] <--name <NAME>|--description <DESCRIPTION>|--tags [<TAGS>...]> <ID>
+
+Arguments:
+  <ID>  ID of the activity to edit
+
+Options:
+  -n, --name <NAME>                New name for the activity
+  -d, --description <DESCRIPTION>  New description for the activity
+  -t, --tags [<TAGS>...]           New list of tags to use for the activity
+  -c, --confirm                    Asks for confirmation before applying changes
+  -C, --no-confirm                 Skip the confirmation before applying changes
+  -v, --verbose...                 Increase logging verbosity
+  -q, --quiet...                   Decrease logging verbosity
+  -h, --help                       Print help
+```
+
+### Edit
+
+If you want to make adjustments to the activity logs (start/end tracking times), you can make use of the `edit` command. Calling the `edit` command will open the list of logs in CSV format in your default `$EDITOR`. You can tweak the `start`/`end` times for multiple logs in there.
+After saving the file and quitting the file, you will be able to preview the changes to be applied and either proceed with the update or discard it.
+
+You may provide a period to edit only a subset of the logs with the `-p`/`--period` flag. If no period is provided, it defaults to whatever is in your config file.
+
+For example, let's say you want to explicitly edit the logs for today, you can do:
+
+```console
+boat edit -p today
+```
+
+This will open up a file with your list of activities:
+
+```csv
+# This is a CSV export of your activities and logs.
+# Lines starting with '#' are comments and should not be modified.
+# Activity definitions are included for reference but are not meant to be edited.
+# You may only edit activity logs here.
+#
+# Activity definitions:
+# | ID | Name | Description | Tags |
+# | -- | ---- | ----------- | ---- |
+# | 51 | take down prod |  |  |
+# | 52 | push to master |  |  |
+# | 55 | work on presenterm slides |  |  |
+
+
+# Below are your activity logs. You can edit the start and end times here.
+# If you want to mark the latest activity as ongoing, simply remove the end time (leave it blank) for that log.
+# Please keep the activity_id and log_id unchanged to avoid breaking the data.
+#
+# Logs (activity_id,log_id,starts_at,ends_at):
+# ===== EDIT DATA BELOW =====
+51,119,2026-04-24 20:42,2026-04-24 20:55
+52,120,2026-04-24 20:55,2026-04-24 20:58
+55,121,2026-04-24 20:58,2026-04-24 21:02
+```
+
+The file includes comments to help you understand how you can edit the logs in there.
+If you start being familiar with the format, you can disable the instructions and activity definitions in the file with the `-I`/`--no-instructions` and `-D`/`--no-activity-definitions` flags.
+This behavior can also be configured in the config file with the `show_instructions` and `show_activity_definitions` options under the `edit` command.
+
+After saving and quitting the file, you will get a preview of the changes to be applied:
+
+```console
+$ boat edit -p today
+Detected changes:
+Log ID 121: starts_at: 2026-04-24 18:58:05 UTC (no change), ends_at: Some(2026-04-24T19:02:58Z) -> 2026-04-24T19:03:00Z
+You are about to update 1 log entries. Do you want to proceed? yes
+successfully updated 1 log entries
+```
+
+Full list of options:
+
+```help
+Edit activity logs as text in an external editor
+
+Usage: boat edit [OPTIONS]
+
+Options:
+  -p, --period <PERIOD>            Period: day|d, week|w, month|m, year|y, <date>, or <start>..<end>
+  -i, --with-instructions          Include instruction comments in the editable file
+  -I, --no-instructions            Do not include instruction comments in the editable file
+  -d, --with-activity-definitions  Include activity definitions comments in the editable file
+  -D, --no-activity-definitions    Do not include activity definitions comments in the editable file
+  -c, --confirm                    Asks for confirmation before applying changes
+  -C, --no-confirm                 Skip the confirmation before applying changes
+  -v, --verbose...                 Increase logging verbosity
+  -q, --quiet...                   Decrease logging verbosity
+  -h, --help                       Print help
+```
+
+### Delete
+
+You may delete an activity with the `delete` command. This will **permanently delete the activity and all its logs**, so be careful with it.
+
+Let's say you started an activity by mistake:
+
+```console
+boat new 'go back to using Windows'
+```
+
+I don't know what brought you to do this point, but it's okay, you can fix it.
+All you need to do is to delete the activity and all its related logs will disappear just like that:
+
+```
+$ boat delete 57
+are you sure you want to delete activity #57 "go back to using Windows"? yes
+deleted #57 "go back to using Windows"
+```
+
+😌 _Phewww_, now nobody will ever know about this dark chapter of your life.
+
+Full list of options:
+
+```help
+Delete an activity
+
+Usage: boat delete [OPTIONS] <ID>
+
+Arguments:
+  <ID>  ID of the activity to delete
+
+Options:
+  -c, --confirm     Asks for confirmation before deleting the activity
+  -C, --no-confirm  Skip the confirmation when deleting the activity
+  -v, --verbose...  Increase logging verbosity
+  -q, --quiet...    Decrease logging verbosity
+  -h, --help        Print help
+```
+
+### Get
+
+Acquiring information about the current activity is really simple. All you need to do is to use the `get` command:
+
+```console
+$ boat get
+current: #55 "work on presenterm slides": 21:24 -> Now (10 seconds)
+```
+
+This command also supports JSON output with the `-j`/`--json` flag:
+
+```console
+$ boat g -j
+{
+  "log": {
+    "starts_at": "2026-04-24T21:24:18+02:00",
+    "ends_at": null
+  },
+  "activity": {
+    "id": 55,
+    "name": "work on presenterm slides",
+    "description": null,
+    "tags": []
+  }
+}
+```
+
+Full list of options:
+
+```help
+Get the current activity
+
+Usage: boat get [OPTIONS]
+
+Options:
+  -j, --json        Output in JSON
+  -v, --verbose...  Increase logging verbosity
+  -q, --quiet...    Decrease logging verbosity
+  -h, --help        Print help
+```
+
+### List
+
+The `list` command can be used to get an overview of all the activities you have been tracking.
+It comes with a lot of options to filter and group the results. You can also output the list in JSON format for further processing in scripts.
+
+The period argument is very extensive and allows you to filter logs using preset periods (e.g. `today`, `yesterday`, `last-week`, `this-month`, `last-month`, etc.), exact dates (e.g. `2026-04-24`) or date ranges (e.g. `2026-04-01..2026-04-24`).
+
+Here is a complete overview of all the available values:
+
+```help
+- Period presets:
+  - today|tod|td
+  - yesterday|ytd|yd
+  - this-week|tw|twk|wk
+  - last-week|lw|lwk|yesterweek|yw|ywk
+  - this-month|tm|tmo|mo
+  - last-month|lm|lmo|yestermonth|ym|ymo
+  - all-time|all
+- Exact date: YYYY-MM-DD
+- Range: YYYY-MM-DD..YYYY-MM-DD
+```
+
+Full list of options:
+
+```console
+List activity logs
+
+Usage: boat list [OPTIONS]
+
+Options:
+  -p, --period <PERIOD>        Restrict matches to a given period: today, yesterday... (--period help to see all options)
+  -g, --group-by <GROUP_BY>    Specify how entries should be grouped [possible values: none, day, week, month, year]
+  -t, --filter-by-tags <TAGS>  Filter out entries that do not have all of the specified tags
+  -j, --json                   Output in JSON format
+  -v, --verbose...             Increase logging verbosity
+  -q, --quiet...               Decrease logging verbosity
+  -h, --help                   Print help
+```
+
+### Report
+
+The `report` command can be used to get a summary of the total time spent on your activities.
+It uses the same filtering options as the `list` command but **does not support grouping yet.**
+
+Full list of options:
+
+```help
+Show activity summaries
+
+Usage: boat report [OPTIONS]
+
+Options:
+  -p, --period <PERIOD>        Restrict matches to a given period: today, yesterday... (--period help to see all options)
+  -g, --group-by <GROUP_BY>    Specify how entries should be grouped [possible values: none, day, week, month, year]
+  -t, --filter-by-tags <TAGS>  Filter out entries that do not have all of the specified tags
+  -j, --json                   Output in JSON format
+  -v, --verbose...             Increase logging verbosity
+  -q, --quiet...               Decrease logging verbosity
+  -h, --help                   Print help
+```
+
+### Init
+
+If, at anytime, you need to get a copy of the default configuration file, you can make use of the `init` command and the full TOML representation will be printed in your terminal for you to copy-paste:
+
+```console
+$ boat init
+database_path = "/home/<user>/.config/boat/boat.db"
+
+[commands.new]
+auto_start = false
+
+[commands.start]
+quick_start = true
+
+[commands.cancel]
+confirm = true
+
+[commands.modify]
+confirm = true
+
+[commands.edit]
+show_instructions = true
+show_activity_definitions = true
+confirm = true
+
+[commands.delete]
+confirm = true
+
+[commands.list]
+
+[commands.report]
+```
+
+Full list of options:
+
+```help
+Generate a default boat config and output to stdout
+
+Usage: boat init [OPTIONS]
+
+Options:
+  -v, --verbose...  Increase logging verbosity
+  -q, --quiet...    Decrease logging verbosity
+  -h, --help        Print help
+```
+
+## 🔮 Alternatives to boat
+
+Hey. I made `boat` to solve my own very specific problems but I don't expect it to be a perfect fit for everyone. If you are looking for similar tools, I got you:
+
+- [`bartib`](https://github.com/nikolassv/bartib)
+- [`zeit`](https://github.com/mrusme/zeit)
 
 ## 🧠 (mostly) Brain made
 
