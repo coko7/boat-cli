@@ -1,22 +1,80 @@
 use anyhow::{Context, Result};
 use boat_lib::{models::activity::Activity as DatabaseActivity, repository::Id};
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, NaiveDate};
 use yansi::Paint;
 
-use crate::utils::{self, date::DateTimeRenderMode};
+use crate::{
+    cli::args::GroupBy,
+    utils::{self, date::DateTimeRenderMode},
+};
 
 pub fn format_ascii_ribbon(text: &str, tooltip_text: Option<&str>) -> String {
     let top_bot = format!("    *{}*\n", "-".repeat(text.len() + 2));
+
+    let arrow_part = match tooltip_text {
+        Some(tt) => format!("|=========( {tt} )====================>"),
+        None => "|==================================>".to_string(),
+    };
+
     format!(
-        "{}{} {} {} {} {}\n{}",
+        "{}{} {} {}\n{}",
         top_bot.blue(),
         "====|".blue(),
         text.cyan().bold(),
-        "|=========(".blue(),
-        tooltip_text.unwrap_or_default().italic(),
-        ")====================>".blue(),
+        arrow_part.blue(),
         top_bot.blue(),
     )
+}
+
+pub fn get_group_by_display_values(
+    group_by: GroupBy,
+    key: &str,
+) -> Result<(String, Option<String>)> {
+    let tuple = match group_by {
+        GroupBy::None => ("ALL".to_string(), None),
+        GroupBy::Day => {
+            let diff_msg = utils::common::get_date_info_msg(
+                Local::now().date_naive(),
+                NaiveDate::parse_from_str(key, "%Y-%m-%d")?,
+            );
+
+            // format!("Day {}", DateTimeRenderMode::DateOnly.render_date_time_str(key)), Some(diff_msg))
+            (key.to_string(), Some(diff_msg))
+        }
+        GroupBy::Week => {
+            let week_num = key.split("-W").nth(1).unwrap_or(key);
+            let first_day_of_week = NaiveDate::parse_from_str(
+                &format!("{}-W{}-1", key.split("-W").next().unwrap_or(key), week_num),
+                "%Y-W%W-%u",
+            )?
+            .format("%b %d, %Y")
+            .to_string();
+            let last_day_of_week = NaiveDate::parse_from_str(
+                &format!("{}-W{}-7", key.split("-W").next().unwrap_or(key), week_num),
+                "%Y-W%W-%u",
+            );
+
+            (
+                format!("Week {week_num}"),
+                Some(format!(
+                    "{} - {}",
+                    first_day_of_week,
+                    last_day_of_week.unwrap().format("%b %d, %Y")
+                )),
+            )
+        }
+        GroupBy::Month => {
+            let first_day_of_month = format!("{}-01", key);
+            (
+                NaiveDate::parse_from_str(&first_day_of_month, "%Y-%m-%d")?
+                    .format("%B %Y")
+                    .to_string(),
+                None,
+            )
+        }
+        GroupBy::Year => (key.to_string(), None),
+    };
+    Ok(tuple)
 }
 
 pub fn created_activity_msg(activity: &DatabaseActivity) -> String {
@@ -51,8 +109,23 @@ pub fn started_activity_msg(activity: &DatabaseActivity, start_dt: DateTime<Loca
     )
 }
 
-pub fn invaid_activity_id(id: Id) -> String {
+pub fn invalid_activity_name(activity_name: &str) -> String {
+    format!(
+        "the activity name cannot only contain digits: \"{}\"",
+        activity_name
+    )
+    .red()
+    .to_string()
+}
+
+pub fn activity_id_does_not_exist(id: Id) -> String {
     format!("#{id} does not exist").red().to_string()
+}
+
+pub fn invalid_activity_id_format(id_str: &str) -> String {
+    format!("invalid activity ID format: \"{}\"", id_str)
+        .red()
+        .to_string()
 }
 
 pub fn deleted_activity_msg(activity: &DatabaseActivity) -> String {

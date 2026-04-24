@@ -41,19 +41,19 @@ fn process_args(args: Cli) -> Result<()> {
     info!("loading config");
     let config = Configuration::load_from_fs()?;
     info!("init db connection");
-    let mut conn = boat_lib::utils::init_database(config.database_path)?;
+    let mut conn = boat_lib::utils::init_database(&config.database_path)?;
 
     match &args.command {
-        cli::Commands::New(args) => commands::create(&mut conn, args),
-        cli::Commands::Start(args) => commands::start(&mut conn, args),
-        cli::Commands::Cancel => commands::cancel_current(&mut conn),
-        cli::Commands::Pause => commands::pause_current(&mut conn),
-        cli::Commands::Modify(args) => commands::modify(&mut conn, args),
-        cli::Commands::Edit(args) => commands::edit(&mut conn, args),
-        cli::Commands::Delete(args) => commands::delete(&mut conn, args),
-        cli::Commands::Get(args) => commands::get_current(&mut conn, args),
-        // cli::Commands::Query { command } => commands::query::query_subcommand(&mut conn, command),
-        cli::Commands::List(args) => commands::list_activities(&mut conn, args),
+        cli::Commands::New(args) => commands::create(&config, &mut conn, args),
+        cli::Commands::Start(args) => commands::start(&config, &mut conn, args),
+        cli::Commands::Cancel(args) => commands::cancel_current(&config, &mut conn, args),
+        cli::Commands::Pause => commands::pause_current(&config, &mut conn),
+        cli::Commands::Modify(args) => commands::modify(&config, &mut conn, args),
+        cli::Commands::Edit(args) => commands::edit(&config, &mut conn, args),
+        cli::Commands::Delete(args) => commands::delete(&config, &mut conn, args),
+        cli::Commands::Get(args) => commands::get_current(&config, &conn, args),
+        cli::Commands::List(args) => commands::list_activity_logs(&config, &conn, args),
+        cli::Commands::Report(args) => commands::show_report(&config, &conn, args),
         cli::Commands::HelpExtension => print_help(),
     }
 }

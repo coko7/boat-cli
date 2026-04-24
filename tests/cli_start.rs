@@ -23,7 +23,7 @@ fn start_with_no_id_fails() -> Result<()> {
 
     run_boat(["start"], config_path)
         .failure()
-        .stderr(predicates::str::contains("ID"));
+        .stderr(predicates::str::contains("ACTIVITY_HANDLE"));
 
     Ok(())
 }

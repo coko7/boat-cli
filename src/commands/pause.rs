@@ -4,9 +4,9 @@ use chrono::Local;
 use log::info;
 use rusqlite::Connection;
 
-use crate::utils;
+use crate::{config::Configuration, utils};
 
-pub fn pause_current(conn: &mut Connection) -> Result<()> {
+pub fn pause_current(config: &Configuration, conn: &mut Connection) -> Result<()> {
     match activities::get_current_ongoing(conn)? {
         Some(current) => {
             info!("ongoing activity: {current:?}");

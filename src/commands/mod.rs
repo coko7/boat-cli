@@ -6,7 +6,7 @@ pub mod get;
 pub mod list;
 pub mod modify;
 pub mod pause;
-pub mod query;
+pub mod report;
 pub mod start;
 
 pub use self::cancel::cancel_current;
@@ -14,7 +14,8 @@ pub use self::create::create;
 pub use self::delete::delete;
 pub use self::edit::edit;
 pub use self::get::get_current;
-pub use self::list::list_activities;
+pub use self::list::list_activity_logs;
 pub use self::modify::modify;
 pub use self::pause::pause_current;
+pub use self::report::show_report;
 pub use self::start::start;

@@ -10,10 +10,10 @@ fn cancel_running_activity_succeeds() -> Result<()> {
     let (_tmp, config_path) = cli_args_for_temp()?;
 
     // Create & start activity
-    run_boat(["new", "to-cancel", "--start"], &config_path).success();
+    run_boat(["new", "to-cancel", "--start-now"], &config_path).success();
 
     // Cancel
-    run_boat(["cancel"], &config_path)
+    run_boat(["cancel", "--no-confirm"], &config_path)
         .success()
         .stdout(predicates::str::contains("cancelled"));
 

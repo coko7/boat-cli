@@ -5,11 +5,16 @@ use rusqlite::Connection;
 
 use crate::{
     cli,
+    config::Configuration,
     models::{activity::SimpleActivity, activity_log::PrintableActivityLog},
     utils,
 };
 
-pub fn get_current(conn: &mut Connection, args: &cli::PrintActivityArgs) -> Result<()> {
+pub fn get_current(
+    config: &Configuration,
+    conn: &Connection,
+    args: &cli::PrintActivityArgs,
+) -> Result<()> {
     match activities::get_current_ongoing(conn)? {
         Some(current) => {
             info!("got current activity: {current:?}");

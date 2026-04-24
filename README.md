@@ -31,6 +31,7 @@ It relies on [`boat-lib`](https://github.com/coko7/boat-lib) for core functions.
   - [Install with a bundled version of SQLite](#install-with-a-bundled-version-of-sqlite)
 - [⚙️ Configuration](#%EF%B8%8F-configuration)
 - [✨ Usage](#-usage)
+- [🧠 (mostly) Brain made](#-mostly-brain-made)
 
 ## 🚀 Demo
 
@@ -96,6 +97,37 @@ database_path = "/home/<user>/.config/boat/boat.db"
 ```
 
 You can override the default configuration file path by setting the `BOAT_CONFIG` environment variable.
+Here is the full default configuration:
+
+```toml
+database_path = "/home/<user>/.config/boat/boat.db"
+period = "all"
+format = "plain"
+
+[commands.new]
+auto_start = false
+
+[commands.start]
+quick_start = true
+
+[commands.cancel]
+confirm = true
+
+[commands.edit]
+show_instructions = true
+show_activity_definitions = true
+confirm = true
+
+[commands.delete]
+confirm = true
+
+[commands.list]
+period = "month"
+group_by = "day"
+
+[commands.report]
+period = "day"
+```
 
 ## ✨ Usage
 
@@ -103,7 +135,7 @@ If you have ever used [`bartib`](https://github.com/nikolassv/bartib), then `boa
 Try `boat help` for a quick list of commands:
 
 ```help
-boat 0.6.0
+boat 0.8.0
 
 Basic Opinionated Activity Tracker
 
@@ -116,10 +148,11 @@ Commands:
   cancel  Cancel the current activity
   pause   Pause/stop the current activity
   modify  Modify an activity
-  edit    Edit activity logs manually
+  edit    Edit activity logs as text in an external editor
   delete  Delete an activity
   get     Get the current activity
-  list    List activities
+  list    List activity logs
+  report  Show activity summaries
   help    Print this message or the help of the given subcommand(s)
 
 Options:
@@ -127,6 +160,8 @@ Options:
   -q, --quiet...    Decrease logging verbosity
   -h, --help        Print help
   -V, --version     Print version
+
+Made by @coko7 <contact@coko7.fr>
 ```
 
 > [!TIP]
@@ -141,6 +176,7 @@ Options:
 > - delete: `d`, `del`, `delete`, `rm`, `rem`, `remove`
 > - get: `g`, `get`
 > - list: `l`, `ls`, `list`
+> - report: `r`, `rep`, `report`
 > - help: `h`, `help`, `-h`, `--help`
 >
 > Prefer using the full length command names in scripts as they are more explicit and unlikely to be changed (unlike shorter aliases).
@@ -152,3 +188,22 @@ Like `stop` would have been a better command than `pause` but since it shares th
 Maybe I will drop this in the future, let's see.
 
 _I have included some fallback in case you type `stop`/`remove` instead of `pause`/`delete` 👀_
+
+## 🧠 (mostly) Brain made
+
+**This project was NOT vibe-coded BUT AI is still involved in some parts of it.**
+
+I think generating big portions of code using AI can be justified in some contexts, and I am not opposed to it if done well. But, I care about this project too much to vibe code it :)
+
+Still, **AI is used** in this project and here's where:
+
+- **Generating tests:** Because it's something I always skip so I would rather have some AI generated tests than none at all.
+- **Micro-improvements:** I have used AI as an advisor to improve some bits of code here and there. Big refactors or new features are done by my hand though. _(This is why this tool breaks so often I guess 💀)_
+
+<a href="https://brainmade.org/">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://brainmade.org/white-logo.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://brainmade.org/black-logo.svg">
+  <img alt="brainmade" src="https://brainmade.org/white-logo.svg">
+</picture>
+</a>

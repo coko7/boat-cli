@@ -6,11 +6,23 @@ use rusqlite::Connection;
 
 use crate::{
     cli,
+    config::Configuration,
     models::activity::{PrintableActivity, SimpleActivity},
     utils,
 };
 
-pub fn create(conn: &mut Connection, args: &cli::CreateActivityArgs) -> Result<()> {
+pub fn create(
+    config: &Configuration,
+    conn: &mut Connection,
+    args: &cli::CreateActivityArgs,
+) -> Result<()> {
+    let start_auto = utils::common::resolve_tri_state(
+        args.auto_start,
+        args.no_auto_start,
+        config.commands.new.auto_start,
+    );
+
+    info!("start the new activity automatically? {start_auto}");
     let new = NewActivity {
         name: args.name.clone(),
         description: args.description.clone(),
@@ -24,7 +36,7 @@ pub fn create(conn: &mut Connection, args: &cli::CreateActivityArgs) -> Result<(
         println!("{}", utils::display::created_activity_msg(&created));
     }
 
-    if args.auto_start {
+    if start_auto {
         info!("activity auto_start is enabled");
         activities::start(conn, created.id)?;
         if !args.use_json_format {
