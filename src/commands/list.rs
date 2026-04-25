@@ -34,9 +34,22 @@ pub fn list_activity_logs(
     let db_acts: Vec<_> = activities::get_all(conn)?;
     let boat_data = BoatData::create_filtered_data(db_acts, period);
 
-    info!("listing individual activity logs");
-    let prt_logs = boat_data.get_printable_logs();
+    info!("filtering logs by tags");
+    let prt_logs = boat_data
+        .get_printable_logs()
+        .into_iter()
+        .filter(|log| {
+            if let Some(filter_tags) = &args.filter_by_tags {
+                filter_tags
+                    .iter()
+                    .all(|tag| log.activity.tags.contains(tag))
+            } else {
+                true
+            }
+        })
+        .collect::<Vec<_>>();
 
+    info!("grouping logs based on group_by value");
     let grouped_logs = group_by(&prt_logs, group_by_value);
     if args.use_json_format {
         let json = serde_json::to_string(&grouped_logs)?;

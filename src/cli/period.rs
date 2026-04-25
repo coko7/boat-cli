@@ -2,8 +2,9 @@ use chrono::{Datelike, Local, Months, NaiveDate};
 use log::debug;
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 use std::{fmt::Display, str::FromStr};
+use yansi::Paint;
 
-use crate::utils::date::DateTimeRenderMode;
+use crate::utils::{self, date::DateTimeRenderMode};
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq)]
 pub enum PresetPeriod {
@@ -65,6 +66,33 @@ impl Default for PeriodInput {
 impl PeriodInput {
     const ERR_MSG: &'static str =
         "Provide either a range (YYYY-MM-DD..YYYY-MM-DD) or a single date (YYYY-MM-DD)";
+
+    fn print_help_message() -> String {
+        let help_msg = format!(
+            "
+{}
+{}
+
+{} {}
+
+{} {}",
+            "* Period presets:".underline(),
+            "
+  - today|tod|td
+  - yesterday|ytd|yd
+  - this-week|tw|twk|wk
+  - last-week|lw|lwk|yesterweek|yw|ywk
+  - this-month|tm|tmo|mo
+  - last-month|lm|lmo|yestermonth|ym|ymo
+  - all-time|all"
+                .green(),
+            "* Exact date:".underline(),
+            "YYYY-MM-DD".green(),
+            "* Range:".underline(),
+            "YYYY-MM-DD..YYYY-MM-DD".green(),
+        );
+        help_msg.to_string()
+    }
 }
 
 impl FromStr for PeriodInput {
@@ -72,7 +100,9 @@ impl FromStr for PeriodInput {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         debug!("period input from: {s}");
         let s = s.to_lowercase();
+
         // Handle presets
+        debug!("checking if period input is a preset");
         match s.as_str() {
             "today" | "td" | "tod" => return Ok(PeriodInput::Preset(PresetPeriod::Today)),
             "yesterday" | "yd" | "ytd" => return Ok(PeriodInput::Preset(PresetPeriod::Yesterday)),
@@ -91,21 +121,21 @@ impl FromStr for PeriodInput {
             "all-time" | "all" => return Ok(PeriodInput::Preset(PresetPeriod::AllTime)),
             _ => {}
         }
+
         // Match range
+        debug!("checking if period input is a date range");
         if let Some((start, end)) = s.split_once("..") {
-            let start = crate::utils::date::parse_date(start).map_err(|_| Self::ERR_MSG)?;
-            let (end, inclusive) = match end.strip_prefix('=') {
-                Some(substr) => (substr, true),
-                None => (end, false),
-            };
-            let end = crate::utils::date::parse_date(end).map_err(|_| Self::ERR_MSG)?;
+            let start = utils::date::parse_date(start).map_err(|_| Self::print_help_message())?;
+            let end = utils::date::parse_date(end).map_err(|_| Self::print_help_message())?;
             if start > end {
                 return Err("DateInput: start cannot be after end when using range".to_string());
             }
             return Ok(PeriodInput::Range { start, end });
         }
+
         // Single date
-        let date = crate::utils::date::parse_date(&s).map_err(|_| Self::ERR_MSG)?;
+        debug!("checking if period input is a single date");
+        let date = crate::utils::date::parse_date(&s).map_err(|_| Self::print_help_message())?;
         Ok(PeriodInput::Single(date))
     }
 }

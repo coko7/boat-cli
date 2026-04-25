@@ -169,7 +169,7 @@ impl Configuration {
             // format: OutputFormat::Plain,
             commands: CommandsConfig {
                 new: NewCommandConfig { auto_start: false },
-                start: StartCommandConfig { quick_start: false },
+                start: StartCommandConfig { quick_start: true },
                 cancel: CancelCommandConfig { confirm: true },
                 // pause: PauseCommandConfig,
                 modify: ModifyCommandConfig { confirm: true },
@@ -284,6 +284,7 @@ mod tests {
         unsafe { std::env::remove_var(CONFIG_VAR) };
         let config = Configuration::create_default().unwrap();
         assert!(!config.commands.new.auto_start);
+        assert!(config.commands.start.quick_start);
         assert!(config.commands.cancel.confirm);
         assert!(config.commands.delete.confirm);
         assert!(config.commands.edit.confirm);
