@@ -147,7 +147,7 @@ If you have ever used [`bartib`](https://github.com/nikolassv/bartib), then `boa
 Try `boat help` for a quick list of commands:
 
 ```help
-boat 0.8.0
+boat 0.9.0
 
 Basic Opinionated Activity Tracker
 
