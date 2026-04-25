@@ -31,7 +31,18 @@ It relies on [`boat-lib`](https://github.com/coko7/boat-lib) for core functions.
   - [Install with a bundled version of SQLite](#install-with-a-bundled-version-of-sqlite)
 - [⚙️ Configuration](#%EF%B8%8F-configuration)
 - [✨ Usage](#-usage)
-- [🔮 Alternatives to boat](-alternatives-to-boat)
+  - [New](#new)
+  - [Start](#start)
+  - [Cancel](#cancel)
+  - [Pause](#pause)
+  - [Modify](#modify)
+  - [Edit](#edit)
+  - [Delete](#delete)
+  - [Get](#get)
+  - [List](#list)
+  - [Report](#report)
+  - [Init](#init)
+- [🔮 Alternatives to boat](#-alternatives-to-boat)
 - [🧠 (mostly) Brain made](#-mostly-brain-made)
 
 ## 🚀 Demo
@@ -154,6 +165,7 @@ Commands:
   get     Get the current activity
   list    List activity logs
   report  Show activity summaries
+  init    Generate a default boat config and output to stdout
   help    Print this message or the help of the given subcommand(s)
 
 Options:
@@ -190,7 +202,11 @@ Maybe I will drop this in the future, let's see.
 
 _I have included some fallback in case you type `stop`/`remove` instead of `pause`/`delete` 👀_
 
-### New
+Below is a breakdown of all the available commands and their options:
+
+<details id="new">
+
+  <summary>New: Create a new activity</summary>
 
 You can use the `new` command to create a new activity, with an optional **description** and **tags** (comma-separated list). If you want to start the activity immediately, you can include the `-s`/`--start-now` flag:
 
@@ -240,7 +256,11 @@ Options:
   -h, --help                       Print help
 ```
 
-### Start
+</details>
+
+<details id="start">
+
+  <summary>Start: Start/resume an activity</summary>
 
 The `start` command may be used to start tracking time for an existing activity.
 It expects an **activity handle** which may be either:
@@ -287,7 +307,11 @@ Options:
   -h, --help        Print help
 ```
 
-### Cancel
+</details>
+
+<details id="cancel">
+
+  <summary>Cancel: Cancel the current activity</summary>
 
 If you started an activity by mistake, you can use the `cancel` command to quickly revert it.
 You can control the confirmation behavior with the `-c`/`--confirm` and `-C`/`--no-confirm` flags or the `confirm` option in the config file.
@@ -307,7 +331,11 @@ Options:
   -h, --help        Print help
 ```
 
-### Pause
+</details>
+
+<details id="pause">
+
+  <summary>Pause: Pause/stop the current activity</summary>
 
 To stop tracking time for the current activity, you can use the `pause` command:
 
@@ -329,7 +357,11 @@ Options:
   -h, --help        Print help
 ```
 
-### Modify
+</details>
+
+<details id="modify">
+
+  <summary>Modify: Pause/stop the current activity</summary>
 
 You can modify the **name**, **description**, and **tags** of an existing activity with the `modify` command:
 
@@ -364,7 +396,11 @@ Options:
   -h, --help                       Print help
 ```
 
-### Edit
+</details>
+
+<details id="edit">
+
+  <summary>Edit: Edit activity logs as text in an external editor</summary>
 
 If you want to make adjustments to the activity logs (start/end tracking times), you can make use of the `edit` command. Calling the `edit` command will open the list of logs in CSV format in your default `$EDITOR`. You can tweak the `start`/`end` times for multiple logs in there.
 After saving the file and quitting the file, you will be able to preview the changes to be applied and either proceed with the update or discard it.
@@ -438,7 +474,11 @@ Options:
   -h, --help                       Print help
 ```
 
-### Delete
+</details>
+
+<details id="delete">
+
+  <summary>Delete: Delete an activity</summary>
 
 You may delete an activity with the `delete` command. This will **permanently delete the activity and all its logs**, so be careful with it.
 
@@ -477,7 +517,11 @@ Options:
   -h, --help        Print help
 ```
 
-### Get
+</details>
+
+<details id="get">
+
+  <summary>Get: Get the current activity</summary>
 
 Acquiring information about the current activity is really simple. All you need to do is to use the `get` command:
 
@@ -518,7 +562,11 @@ Options:
   -h, --help        Print help
 ```
 
-### List
+</details>
+
+<details id="list">
+
+  <summary>List: List activity logs</summary>
 
 The `list` command can be used to get an overview of all the activities you have been tracking.
 It comes with a lot of options to filter and group the results. You can also output the list in JSON format for further processing in scripts.
@@ -557,7 +605,11 @@ Options:
   -h, --help                   Print help
 ```
 
-### Report
+</details>
+
+<details id="report">
+
+  <summary>Report: Show activity summaries</summary>
 
 The `report` command can be used to get a summary of the total time spent on your activities.
 It uses the same filtering options as the `list` command but **does not support grouping yet.**
@@ -579,7 +631,11 @@ Options:
   -h, --help                   Print help
 ```
 
-### Init
+</details>
+
+<details id="init">
+
+  <summary>Init: Generate a default boat config and output to stdout</summary>
 
 If, at anytime, you need to get a copy of the default configuration file, you can make use of the `init` command and the full TOML representation will be printed in your terminal for you to copy-paste:
 
@@ -625,12 +681,14 @@ Options:
   -h, --help        Print help
 ```
 
+</details>
+
 ## 🔮 Alternatives to boat
 
 Hey. I made `boat` to solve my own very specific problems but I don't expect it to be a perfect fit for everyone. If you are looking for similar tools, I got you:
 
-- [`bartib`](https://github.com/nikolassv/bartib)
-- [`zeit`](https://github.com/mrusme/zeit)
+- [`bartib`](https://github.com/nikolassv/bartib): A simple timetracker for the command line. It saves a log of all tracked activities as a plaintext file and allows you to create flexible reports.
+- [`zeit`](https://github.com/mrusme/zeit): Zeit, erfassen. A command line tool for tracking time.
 
 ## 🧠 (mostly) Brain made
 
