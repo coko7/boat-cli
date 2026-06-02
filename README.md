@@ -463,6 +463,7 @@ Usage: boat edit [OPTIONS]
 
 Options:
   -p, --period <PERIOD>            Period: day|d, week|w, month|m, year|y, <date>, or <start>..<end>
+  -e, --editor <EDITOR>            Specify the editor program to use
   -i, --with-instructions          Include instruction comments in the editable file
   -I, --no-instructions            Do not include instruction comments in the editable file
   -d, --with-activity-definitions  Include activity definitions comments in the editable file
