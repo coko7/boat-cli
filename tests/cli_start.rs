@@ -43,3 +43,36 @@ fn start_when_other_activity_is_running_suceeds() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn start_resumes_paused_activity() -> Result<()> {
+    let (_tmp, config_path) = cli_args_for_temp()?;
+
+    run_boat(["new", "ResumeMe"], &config_path).success();
+    run_boat(["start", "1"], &config_path).success();
+    run_boat(["pause"], &config_path).success();
+
+    // Resuming the paused activity should succeed and make it current again
+    run_boat(["start", "1"], &config_path).success();
+
+    run_boat(["get", "--json"], &config_path)
+        .success()
+        .stdout(predicates::str::contains("ResumeMe"));
+
+    Ok(())
+}
+
+#[test]
+fn start_by_name_succeeds() -> Result<()> {
+    let (_tmp, config_path) = cli_args_for_temp()?;
+
+    run_boat(["new", "ByName"], &config_path).success();
+
+    run_boat(["start", "ByName"], &config_path).success();
+
+    run_boat(["get", "--json"], &config_path)
+        .success()
+        .stdout(predicates::str::contains("ByName"));
+
+    Ok(())
+}

@@ -49,3 +49,18 @@ fn delete_with_missing_id_arg_fails() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn delete_running_activity_succeeds() -> Result<()> {
+    let (_tmp, config_path) = cli_args_for_temp()?;
+
+    run_boat(["new", "ActiveTask", "--start-now"], &config_path).success();
+
+    run_boat(["delete", "1", "--no-confirm"], &config_path).success();
+
+    run_boat(["list", "--json"], &config_path)
+        .success()
+        .stdout(predicates::str::contains("ActiveTask").not());
+
+    Ok(())
+}

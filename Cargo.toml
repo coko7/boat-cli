@@ -30,6 +30,7 @@ boat-lib = "0.5.0"
 tabular = { version = "0.2.0", features = ["ansi-cell"] }
 yansi = "1.0.1"
 dialoguer = "0.12.0"
+which = "8.0.2"
 
 [dev-dependencies]
 assert_cmd = "2.0"

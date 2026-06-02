@@ -41,3 +41,17 @@ fn get_when_no_current_activity_fails() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn get_after_pause_fails() -> Result<()> {
+    let (_tmp, config_path) = cli_args_for_temp()?;
+
+    run_boat(["new", "WasRunning", "--start-now"], &config_path).success();
+    run_boat(["pause"], &config_path).success();
+
+    run_boat(["get", "--json"], &config_path)
+        .failure()
+        .stderr(predicates::str::contains("no current activity"));
+
+    Ok(())
+}

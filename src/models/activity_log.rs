@@ -68,3 +68,69 @@ impl RowPrintable for PrintableActivityLog {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use boat_lib::models::log::Log as DatabaseLog;
+    use chrono::{TimeZone, Utc};
+    use std::collections::HashSet;
+
+    fn make_activity() -> SimpleActivity {
+        SimpleActivity {
+            id: 7,
+            name: "testing".to_string(),
+            description: Some("a desc".to_string()),
+            tags: HashSet::new(),
+        }
+    }
+
+    fn make_log(ends_after_secs: Option<i64>) -> DatabaseLog {
+        let start = Utc.with_ymd_and_hms(2024, 4, 15, 10, 0, 0).unwrap();
+        DatabaseLog {
+            id: 42,
+            activity_id: 7,
+            starts_at: start,
+            ends_at: ends_after_secs.map(|s| start + chrono::Duration::seconds(s)),
+        }
+    }
+
+    #[test]
+    fn row_values_open_log_shows_dash_for_end() {
+        let pal = PrintableActivityLog::from_activity_and_log(&make_activity(), &make_log(None));
+        assert_eq!(pal.row_values()[5], "-");
+    }
+
+    #[test]
+    fn row_values_closed_log_has_non_empty_end() {
+        let pal =
+            PrintableActivityLog::from_activity_and_log(&make_activity(), &make_log(Some(3600)));
+        let end_col = &pal.row_values()[5];
+        assert_ne!(end_col, "-");
+        assert!(!end_col.is_empty());
+    }
+
+    #[test]
+    fn row_values_id_and_name_match_activity() {
+        let pal =
+            PrintableActivityLog::from_activity_and_log(&make_activity(), &make_log(Some(3600)));
+        let values = pal.row_values();
+        assert_eq!(values[0], "7");
+        assert_eq!(values[1], "testing");
+    }
+
+    #[test]
+    fn style_cell_closed_log_returns_value_unchanged() {
+        let pal =
+            PrintableActivityLog::from_activity_and_log(&make_activity(), &make_log(Some(3600)));
+        let val = "unchanged".to_string();
+        assert_eq!(pal.style_cell(val.clone()), val);
+    }
+
+    #[test]
+    fn style_cell_open_log_result_contains_original_value() {
+        let pal = PrintableActivityLog::from_activity_and_log(&make_activity(), &make_log(None));
+        let val = "styled".to_string();
+        assert!(pal.style_cell(val.clone()).contains(&val));
+    }
+}
