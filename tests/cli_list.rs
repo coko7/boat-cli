@@ -7,6 +7,31 @@ use crate::utils::{cli_args_for_temp, run_boat};
 mod utils;
 
 #[test]
+fn list_with_no_activities_shows_no_data() -> Result<()> {
+    let (_tmp, config_path) = cli_args_for_temp()?;
+
+    run_boat(["list"], config_path)
+        .success()
+        .stdout(predicates::str::contains("no available data"));
+
+    Ok(())
+}
+
+#[test]
+fn list_shows_activity_name() -> Result<()> {
+    let (_tmp, config_path) = cli_args_for_temp()?;
+
+    run_boat(["new", "ListedTask", "--start-now"], &config_path).success();
+    run_boat(["pause"], &config_path).success();
+
+    run_boat(["list"], &config_path)
+        .success()
+        .stdout(predicates::str::contains("ListedTask"));
+
+    Ok(())
+}
+
+#[test]
 fn list_with_invalid_date_input_fails() -> Result<()> {
     let (_tmp, config_path) = cli_args_for_temp()?;
 

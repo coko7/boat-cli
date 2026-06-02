@@ -56,7 +56,14 @@ pub fn edit(
     let default_content = boat_data.to_csv_str(include_instructions, include_activity_definitions);
     let edit_file_path = create_tmp_edit_file(&default_content)?;
 
-    let editor = env::var("EDITOR").unwrap_or_else(|_| "vim".to_string());
+    let editor = args
+        .editor
+        .clone()
+        .or_else(|| env::var("EDITOR").ok())
+        .context("No editor specified and EDITOR is not set")?;
+
+    resolve_editor(&editor)?;
+    info!("launching editor: {editor}");
     let status = Command::new(editor).arg(&edit_file_path).status()?;
 
     ensure!(
@@ -135,6 +142,17 @@ struct EditLogDiff {
     starts_at_new: Option<DateTime<Utc>>,
     ends_at_current: Option<DateTime<Utc>>,
     ends_at_new: Option<Option<DateTime<Utc>>>,
+}
+
+fn resolve_editor(editor: &str) -> Result<()> {
+    if editor.is_empty() {
+        bail!(
+            "Default text editor not found. Please refer to your shell documentation to set your EDITOR environment variable."
+        );
+    }
+
+    which::which(editor).with_context(|| format!("EDITOR command not found: {editor}"))?;
+    Ok(())
 }
 
 fn pretty_print_edit_diffs(diffs: &[EditLogDiff]) {
@@ -391,10 +409,13 @@ fn convert_modified_content_to_log_lines(content: &str) -> Result<Vec<DatabaseLo
 }
 
 fn create_tmp_edit_file(content: &str) -> Result<PathBuf> {
-    info!("creating temporary file for editing");
     let tmp_dir = env::temp_dir();
     let file_path = tmp_dir.join("boat_edit_logs_tmp.csv");
     fs::write(&file_path, content)?;
+    info!(
+        "created temporary file for editing: {}",
+        file_path.display()
+    );
     Ok(file_path)
 }
 
@@ -477,5 +498,121 @@ mod tests {
     fn test_convert_modified_content_to_log_lines_invalid() {
         let csv = "1, 10, not-a-date, 2024-06-01 11:00";
         assert!(convert_modified_content_to_log_lines(csv).is_err());
+    }
+
+    // --- resolve_editor ---
+
+    #[test]
+    fn resolve_editor_empty_string_fails() {
+        assert!(resolve_editor("").is_err());
+    }
+
+    #[test]
+    fn resolve_editor_nonexistent_command_fails() {
+        assert!(resolve_editor("definitely-not-a-real-editor-xyz").is_err());
+    }
+
+    // --- try_generate_edit_diffs error paths ---
+
+    #[test]
+    fn try_generate_edit_diffs_length_mismatch_fails() {
+        let orig = vec![make_log(1, 1, "2024-06-01 10:00", Some("2024-06-01 11:00"))];
+        let edited = vec![
+            make_log(1, 1, "2024-06-01 10:00", Some("2024-06-01 11:00")),
+            make_log(2, 1, "2024-06-01 12:00", Some("2024-06-01 13:00")),
+        ];
+        assert!(try_generate_edit_diffs(&edited, &orig).is_err());
+    }
+
+    #[test]
+    fn try_generate_edit_diffs_multiple_open_ended_logs_fails() {
+        let orig = vec![
+            make_log(1, 1, "2024-06-01 10:00", None),
+            make_log(2, 1, "2024-06-01 12:00", None),
+        ];
+        assert!(try_generate_edit_diffs(&orig, &orig).is_err());
+    }
+
+    #[test]
+    fn try_generate_edit_diffs_unknown_log_id_fails() {
+        let orig = vec![make_log(1, 1, "2024-06-01 10:00", Some("2024-06-01 11:00"))];
+        let edited = vec![make_log(
+            99,
+            1,
+            "2024-06-01 10:00",
+            Some("2024-06-01 11:00"),
+        )];
+        assert!(try_generate_edit_diffs(&edited, &orig).is_err());
+    }
+
+    #[test]
+    fn try_generate_edit_diffs_activity_id_changed_fails() {
+        let orig = vec![make_log(1, 1, "2024-06-01 10:00", Some("2024-06-01 11:00"))];
+        let edited = vec![make_log(
+            1,
+            999,
+            "2024-06-01 10:00",
+            Some("2024-06-01 11:00"),
+        )];
+        assert!(try_generate_edit_diffs(&edited, &orig).is_err());
+    }
+
+    #[test]
+    fn try_generate_edit_diffs_starts_at_after_ends_at_fails() {
+        let orig = vec![make_log(1, 1, "2024-06-01 10:00", Some("2024-06-01 11:00"))];
+        let edited = vec![make_log(1, 1, "2024-06-01 12:00", Some("2024-06-01 11:00"))];
+        assert!(try_generate_edit_diffs(&edited, &orig).is_err());
+    }
+
+    // --- try_generate_edit_diffs happy paths ---
+
+    #[test]
+    fn try_generate_edit_diffs_no_change_returns_empty() {
+        let logs = vec![make_log(1, 1, "2024-06-01 10:00", Some("2024-06-01 11:00"))];
+        let diffs = try_generate_edit_diffs(&logs, &logs).unwrap();
+        assert!(diffs.is_empty());
+    }
+
+    #[test]
+    fn try_generate_edit_diffs_detects_ends_at_change() {
+        let orig = vec![make_log(1, 1, "2024-06-01 10:00", Some("2024-06-01 11:00"))];
+        let edited = vec![make_log(1, 1, "2024-06-01 10:00", Some("2024-06-01 12:00"))];
+        let diffs = try_generate_edit_diffs(&edited, &orig).unwrap();
+        assert_eq!(diffs.len(), 1);
+        assert!(diffs[0].ends_at_new.is_some());
+        assert!(diffs[0].starts_at_new.is_none());
+    }
+
+    #[test]
+    fn try_generate_edit_diffs_detects_log_closed_to_open() {
+        let orig = vec![make_log(1, 1, "2024-06-01 10:00", Some("2024-06-01 11:00"))];
+        let edited = vec![make_log(1, 1, "2024-06-01 10:00", None)];
+        let diffs = try_generate_edit_diffs(&edited, &orig).unwrap();
+        assert_eq!(diffs.len(), 1);
+        // ends_at_new is Some(None) — the log was re-opened
+        assert_eq!(diffs[0].ends_at_new, Some(None));
+    }
+
+    // --- date_time_opt_loose_eq ---
+
+    #[test]
+    fn date_time_opt_loose_eq_both_none_are_equal() {
+        let none: Option<DateTime<Utc>> = None;
+        assert!(date_time_opt_loose_eq(&none, &none).unwrap());
+    }
+
+    #[test]
+    fn date_time_opt_loose_eq_some_and_none_are_not_equal() {
+        let some = Some(Utc.with_ymd_and_hms(2024, 6, 1, 10, 0, 0).unwrap());
+        let none = None;
+        assert!(!date_time_opt_loose_eq(&some, &none).unwrap());
+        assert!(!date_time_opt_loose_eq(&none, &some).unwrap());
+    }
+
+    #[test]
+    fn date_time_opt_loose_eq_different_minutes_are_not_equal() {
+        let dt1 = Some(Utc.with_ymd_and_hms(2024, 6, 1, 10, 0, 0).unwrap());
+        let dt2 = Some(Utc.with_ymd_and_hms(2024, 6, 1, 10, 1, 0).unwrap());
+        assert!(!date_time_opt_loose_eq(&dt1, &dt2).unwrap());
     }
 }

@@ -190,3 +190,49 @@ pub fn current_activity_msg(activity: &DatabaseActivity) -> Result<String> {
 pub fn no_current_act_msg() -> String {
     "no current activity".to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_group_by_display_values_none_returns_all() {
+        let (label, tooltip) = get_group_by_display_values(GroupBy::None, "anything").unwrap();
+        assert_eq!(label, "ALL");
+        assert!(tooltip.is_none());
+    }
+
+    #[test]
+    fn get_group_by_display_values_year_returns_key() {
+        let (label, tooltip) = get_group_by_display_values(GroupBy::Year, "2024").unwrap();
+        assert_eq!(label, "2024");
+        assert!(tooltip.is_none());
+    }
+
+    #[test]
+    fn get_group_by_display_values_month_formats_name() {
+        let (label, tooltip) = get_group_by_display_values(GroupBy::Month, "2024-04").unwrap();
+        assert_eq!(label, "April 2024");
+        assert!(tooltip.is_none());
+    }
+
+    #[test]
+    fn get_group_by_display_values_month_invalid_key_fails() {
+        assert!(get_group_by_display_values(GroupBy::Month, "not-a-month").is_err());
+    }
+
+    #[test]
+    fn get_group_by_display_values_week_label_and_date_range() {
+        let (label, tooltip) = get_group_by_display_values(GroupBy::Week, "2024-W10").unwrap();
+        assert_eq!(label, "Week 10");
+        // 2024 starts on a Monday, so week 10 runs Mar 04–Mar 10
+        let tooltip = tooltip.unwrap();
+        assert!(tooltip.contains("Mar 04, 2024"), "got: {tooltip}");
+        assert!(tooltip.contains("Mar 10, 2024"), "got: {tooltip}");
+    }
+
+    #[test]
+    fn get_group_by_display_values_week_invalid_key_fails() {
+        assert!(get_group_by_display_values(GroupBy::Week, "not-a-week").is_err());
+    }
+}

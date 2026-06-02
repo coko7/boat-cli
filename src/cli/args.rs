@@ -287,6 +287,10 @@ pub struct EditLogsArgs {
     )]
     pub period: Option<PeriodInput>,
 
+    /// Specify the editor program to use
+    #[arg(short = 'e', long = "editor")]
+    pub editor: Option<String>,
+
     /// Include instruction comments in the editable file
     #[arg(short = 'i', long = "with-instructions", alias = "with-instr", action = ArgAction::SetTrue, conflicts_with = "hide_instructions")]
     pub show_instructions: bool,
