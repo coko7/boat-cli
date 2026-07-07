@@ -4,7 +4,7 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-use crate::models::RowPrintable;
+use crate::models::{FieldSpec, RowPrintable};
 use crate::utils;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -58,15 +58,14 @@ impl PrintableActivity {
 }
 
 impl RowPrintable for PrintableActivity {
-    fn row_spec() -> String {
-        "{:>}  {:<}  {:<}  {:<}  {:<}".to_string()
-    }
-
-    fn header_names() -> Vec<String> {
-        ["ID", "Name", "Description", "Tags", "Duration"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect()
+    fn field_specs() -> Vec<FieldSpec> {
+        vec![
+            ("id", "ID", '>'),
+            ("name", "Name", '<'),
+            ("description", "Description", '<'),
+            ("tags", "Tags", '<'),
+            ("duration", "Duration", '<'),
+        ]
     }
 
     fn row_values(&self) -> Vec<String> {

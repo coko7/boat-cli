@@ -168,6 +168,10 @@ pub struct FilterActivitiesArgs {
     #[arg(short = 't', long = "filter-by-tags", value_name = "TAGS", value_delimiter = ',', action = ArgAction::Append)]
     pub filter_by_tags: Option<Vec<String>>,
 
+    /// Select and order which fields are shown in the table (comma-separated)
+    #[arg(short = 'f', long = "fields", value_name = "FIELDS", value_delimiter = ',', action = ArgAction::Append)]
+    pub fields: Option<Vec<String>>,
+
     /// Output in JSON format
     #[arg(short = 'j', long = "json")]
     pub use_json_format: bool,

@@ -2,7 +2,7 @@ use boat_lib::models::tag::Tag as DatabaseTag;
 use boat_lib::repository::Id;
 use serde::{Deserialize, Serialize};
 
-use crate::models::RowPrintable;
+use crate::models::{FieldSpec, RowPrintable};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PrintableTag {
@@ -20,12 +20,8 @@ impl PrintableTag {
 }
 
 impl RowPrintable for PrintableTag {
-    fn row_spec() -> String {
-        "{:>}  {:<}".to_string()
-    }
-
-    fn header_names() -> Vec<String> {
-        ["ID", "Name"].iter().map(|s| s.to_string()).collect()
+    fn field_specs() -> Vec<FieldSpec> {
+        vec![("id", "ID", '>'), ("name", "Name", '<')]
     }
 
     fn row_values(&self) -> Vec<String> {

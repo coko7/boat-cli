@@ -62,13 +62,24 @@ pub fn show_report(
         // }
     }
 
-    list_activity_summaries(&boat_data, args.use_json_format, &args.filter_by_tags)
+    let fields = args
+        .fields
+        .clone()
+        .or_else(|| config.commands.report.fields.clone());
+
+    list_activity_summaries(
+        &boat_data,
+        args.use_json_format,
+        &args.filter_by_tags,
+        fields.as_deref(),
+    )
 }
 
 fn list_activity_summaries(
     boat_data: &BoatData,
     use_json: bool,
     filter_by_tags: &Option<Vec<String>>,
+    fields: Option<&[String]>,
 ) -> Result<()> {
     info!("filtering logs by tags");
     let prt_acts = boat_data
@@ -85,7 +96,7 @@ fn list_activity_summaries(
         .collect();
 
     info!("listing activity summaries");
-    utils::common::list_printable_items(&prt_acts, use_json)?;
+    utils::common::list_printable_items(&prt_acts, use_json, fields)?;
 
     if !use_json && !prt_acts.is_empty() {
         let total_sec: i64 = prt_acts.iter().map(|pa| pa.duration).sum();

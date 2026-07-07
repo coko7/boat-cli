@@ -130,6 +130,11 @@ pub struct ListCommandConfig {
     #[serde(rename = "group_by")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group_by: Option<GroupBy>,
+
+    /// Select and order which fields are shown in the table
+    #[serde(rename = "fields")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fields: Option<Vec<String>>,
     // /// Specify how entries should be sorted
     // #[serde(rename = "sort_by")]
     // pub sort_by: Option<String>,
@@ -144,6 +149,11 @@ pub struct ReportCommandConfig {
     #[serde(rename = "period")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub period: Option<PeriodInput>,
+
+    /// Select and order which fields are shown in the table
+    #[serde(rename = "fields")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fields: Option<Vec<String>>,
     // /// Specify how entries should be grouped
     // #[serde(rename = "group_by")]
     // #[serde(skip_serializing_if = "Option::is_none")]
@@ -184,11 +194,13 @@ impl Configuration {
                 list: ListCommandConfig {
                     period: None,
                     group_by: None,
+                    fields: None,
                     // sort_by: None,
                     // format: None,
                 },
                 report: ReportCommandConfig {
                     period: None,
+                    fields: None,
                     // group_by: None,
                     // sort_by: None,
                     // format: None,
