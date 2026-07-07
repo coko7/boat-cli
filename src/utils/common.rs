@@ -33,6 +33,7 @@ pub fn prompt_for_confirmation(msg: &str, default_value: bool) -> Result<bool> {
 pub fn list_printable_items<T: RowPrintable + Serialize>(
     items: &Vec<T>,
     show_as_json: bool,
+    fields: Option<&[String]>,
 ) -> Result<()> {
     if show_as_json {
         let json = serde_json::to_string(&items)?;
@@ -45,7 +46,7 @@ pub fn list_printable_items<T: RowPrintable + Serialize>(
         return Ok(());
     }
 
-    let table = items.to_printable_table();
+    let table = items.to_printable_table(fields)?;
     println!("{table}");
     Ok(())
 }

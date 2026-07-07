@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use yansi::Paint;
 
 use crate::{
-    models::{RowPrintable, activity::SimpleActivity, log::PrintableLog},
+    models::{FieldSpec, RowPrintable, activity::SimpleActivity, log::PrintableLog},
     utils::{self, date::DateTimeRenderMode},
 };
 
@@ -23,23 +23,16 @@ impl PrintableActivityLog {
 }
 
 impl RowPrintable for PrintableActivityLog {
-    fn row_spec() -> String {
-        "    {:>}  {:<}  {:<}  {:<}  {:^}  {:^}  {:<}".to_string()
-    }
-
-    fn header_names() -> Vec<String> {
-        [
-            "ID",
-            "Name",
-            "Description",
-            "Tags",
-            "Start",
-            "End",
-            "Duration",
+    fn field_specs() -> Vec<FieldSpec> {
+        vec![
+            ("id", "ID", '>'),
+            ("name", "Name", '<'),
+            ("description", "Description", '<'),
+            ("tags", "Tags", '<'),
+            ("start", "Start", '^'),
+            ("end", "End", '^'),
+            ("duration", "Duration", '<'),
         ]
-        .iter()
-        .map(|s| s.to_string())
-        .collect()
     }
 
     fn row_values(&self) -> Vec<String> {

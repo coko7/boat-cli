@@ -30,6 +30,11 @@ pub fn list_activity_logs(
         .unwrap_or(GroupBy::None);
     info!("grouping by: {group_by_value}");
 
+    let fields = args
+        .fields
+        .clone()
+        .or_else(|| config.commands.list.fields.clone());
+
     info!("getting all activities");
     let db_acts: Vec<_> = activities::get_all(conn)?;
     let boat_data = BoatData::create_filtered_data(db_acts, period);
@@ -67,7 +72,7 @@ pub fn list_activity_logs(
         let (text, tooltip) = utils::display::get_group_by_display_values(group_by_value, group)?;
         let ribbon = utils::display::format_ascii_ribbon(&text, tooltip.as_deref());
         println!("{ribbon}");
-        utils::common::list_printable_items(act_logs, false)?;
+        utils::common::list_printable_items(act_logs, false, fields.as_deref())?;
     }
 
     Ok(())
