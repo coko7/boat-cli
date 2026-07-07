@@ -4,6 +4,13 @@
 
 ![](./docs/boat-cli.png)
 
+<p align="center">
+    <a href="https://crates.io/crates/boat-cli"><img src="https://img.shields.io/crates/v/boat-cli.svg" alt="Crates info"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/coko7/boat-cli?color=blue" alt="License: MIT"></a>
+    <img src="https://img.shields.io/github/languages/top/coko7/boat-cli?color=orange" alt="Rust">
+    <a href="https://github.com/coko7/boat-cli/actions/workflows/rust.yml"><img src="https://github.com/coko7/boat-cli/actions/workflows/rust.yml/badge.svg" alt="Tests"></a>
+</p>
+
 Like its name implies, `boat` allows you to track the time
 you spend on everyday tasks.
 
@@ -17,11 +24,6 @@ in the config directory by default (`.config/boat/boat.db`).
 
 This repository contains only the code for the command line application.
 It relies on [`boat-lib`](https://github.com/coko7/boat-lib) for core functions.
-
-[![Crates info](https://img.shields.io/crates/v/boat-cli.svg)](https://crates.io/crates/boat-cli)
-[![License: GPL-3.0](https://img.shields.io/github/license/coko7/boat-cli?color=blue)](LICENSE)
-![Rust](https://img.shields.io/github/languages/top/coko7/boat-cli?color=orange)
-[![Tests](https://github.com/coko7/boat-cli/actions/workflows/rust.yml/badge.svg)](https://github.com/coko7/boat-cli/actions/workflows/rust.yml)
 
 ## Contents
 
